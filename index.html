@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>複利投資模擬、目標倒推與價值選股系統</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --input-bg: #334155;
+      --accent: #38bdf8;
+      --accent-green: #34d399;
+      --accent-yellow: #fbbf24;
+      --accent-red: #f87171;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 1060px;
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    h2 {
+      margin-top: 0;
+      color: var(--accent);
+      font-size: 22px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 22px;
+      background: #0b1120;
+      padding: 6px;
+      border-radius: 12px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: transparent;
+      color: var(--text-sub);
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #0f172a;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .control-group {
+      background: var(--input-bg);
+      padding: 16px;
+      border-radius: 10px;
+    }
+    label {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .input-row {
+      display: flex;
+      gap: 8px;
+    }
+    select, input[type="number"], input[type="text"] {
+      background: #0f172a;
+      color: #fff;
+      border: 1px solid #475569;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    input[type="number"], input[type="text"] {
+      flex: 1;
+    }
+    select {
+      min-width: 90px;
+    }
+    input[type="range"] {
+      width: 100%;
+      margin-top: 10px;
+      accent-color: var(--accent);
+    }
+    .preset-container {
+      grid-column: span 2;
+      background: #1e293b;
+      border: 1px solid #334155;
+      padding: 14px;
+      border-radius: 10px;
+    }
+    @media (max-width: 768px) {
+      .preset-container {
+        grid-column: span 1;
+      }
+    }
+    .preset-title {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .preset-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chip {
+      background: #0f172a;
+      border: 1px solid #475569;
+      color: #e2e8f0;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .summary-grid {
+      grid-column: span 2;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-top: 6px;
+    }
+    @media (max-width: 768px) {
+      .summary-grid {
+        grid-column: span 1;
+        grid-template-columns: 1fr;
+      }
+    }
+    .summary-card {
+      background: #0284c7;
+      color: #fff;
+      padding: 14px 18px;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .summary-card.secondary {
+      background: #334155;
+      border: 1px solid #475569;
+    }
+    .summary-title {
+      font-size: 13px;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+    .summary-value {
+      font-size: 22px;
+      font-weight: 700;
+      word-break: break-all;
+    }
+    .chart-box {
+      position: relative;
+      height: 420px;
+      width: 100%;
+      margin-top: 10px;
+    }
+    .goal-banner {
+      background: linear-gradient(135deg, #0369a1, #0f766e);
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .goal-result-title {
+      font-size: 15px;
+      margin-bottom: 6px;
+      color: #e0f2fe;
+    }
+    .goal-result-highlight {
+      font-size: 32px;
+      font-weight: 800;
+      color: #38f8d4;
+    }
+    .goal-desc {
+      font-size: 14px;
+      color: #f0fdfa;
+      margin-top: 6px;
+    }
+
+    /* ===== 分頁三樣式：價值選股系統 ===== */
+    .market-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0b1120;
+      padding: 10px 16px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .market-segmented {
+      display: flex;
+      gap: 6px;
+      background: #1e293b;
+      padding: 4px;
+      border-radius: 8px;
+    }
+    .market-btn {
+      padding: 6px 14px;
+      border: none;
+      background: transparent;
+      color: var(--text-sub);
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .market-btn.active {
+      background: var(--accent);
+      color: #0f172a;
+    }
+    .submode-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .submode-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid #475569;
+      background: #1e293b;
+      color: var(--text-main);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .submode-btn.active {
+      border-color: var(--accent);
+      background: #334155;
+      color: var(--accent);
+    }
+    .criteria-box {
+      background: #182234;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .criteria-title {
+      font-weight: bold;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .stock-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .stock-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .stock-symbol {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .stock-name {
+      font-size: 15px;
+      color: #cbd5e1;
+      margin-left: 8px;
+    }
+    .stock-score-badge {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: 800;
+      font-size: 14px;
+    }
+    .badge-tw {
+      background: #1e3a8a;
+      color: #93c5fd;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+    .badge-us {
+      background: #065f46;
+      color: #a7f3d0;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+    .tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .metric-tag {
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #0f172a;
+      border: 1px solid #475569;
+    }
+    .metric-tag.pass {
+      border-color: rgba(52, 211, 153, 0.4);
+      color: #34d399;
+    }
+    .metric-tag.bonus {
+      border-color: rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+    }
+    .metric-tag.fail {
+      border-color: rgba(248, 113, 113, 0.4);
+      color: #f87171;
+    }
+    .reason-box {
+      background: #0f172a;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+    .expert-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .expert-card {
+      background: #182234;
+      border: 1px solid #334155;
+      padding: 12px;
+      border-radius: 8px;
+    }
+    .expert-card label {
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    .expert-card .input-unit {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .expert-card .input-unit span {
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>投資動態模擬、目標倒推與價值選股系統</h2>
+
+  <!-- 導航切換按鈕 -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('forwardTab', this)">動態複利模擬與回測</button>
+    <button class="tab-btn" onclick="switchTab('backwardTab', this)">財務目標逆推計算</button>
+    <button class="tab-btn" onclick="switchTab('stockTab', this)">價值選股與標的評估</button>
+  </div>
+
+  <!-- 分頁一：動態複利模擬與簡易回測 -->
+  <div id="forwardTab" class="tab-content active">
+    <div class="grid">
+      <div class="preset-container">
+        <div class="preset-title">簡易大盤與策略長期回測（點選一鍵套用年化報酬）：</div>
+        <div class="preset-chips">
+          <button class="chip" onclick="applyRate(8.5)">全球全市場 (8.5%)</button>
+          <button class="chip" onclick="applyRate(10.5)">美股標普 500 (10.5%)</button>
+          <button class="chip" onclick="applyRate(11.2)">台股大盤含息 (11.2%)</button>
+          <button class="chip" onclick="applyRate(16.8)">科技巨擘 QQQ (16.8%)</button>
+          <button class="chip" onclick="applyRate(25.0)">主動成長組合 (25.0%)</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>
+          <span>起始本金 / 現有總資產</span>
+          <span id="pvDisplay">180 萬</span>
+        </label>
+        <div class="input-row">
+          <input type="number" id="pvInput" value="180" min="0" step="any">
+          <select id="currencySelect">
+            <option value="TWD" selected>台幣 (TWD)</option>
+            <option value="USD">美金 (USD)</option>
+          </select>
+          <select id="pvMagnitudeSelect">
+            <option value="10000" selected>萬</option>
+            <option value="1000000">百萬</option>
+            <option value="100000000">億</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>
+          <span>每月定期定額投入</span>
+          <span id="pmtDisplay">0 萬</span>
+        </label>
+        <div class="input-row">
+          <input type="number" id="pmtInput" value="0" min="0" step="any">
+          <select id="pmtMagnitudeSelect">
+            <option value="100">百</option>
+            <option value="1000">千</option>
+            <option value="10000" selected>萬</option>
+            <option value="1000000">百萬</option>
+            <option value="100000000">億</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>
+          <span>預期年化報酬率 (CAGR)</span>
+          <span id="rateDisplay">10.5 %</span>
+        </label>
+        <input type="number" id="rateInput" value="10.5" min="0" max="100" step="0.1">
+        <input type="range" id="rateSlider" min="1" max="50" step="0.5" value="10.5">
+      </div>
+
+      <div class="control-group">
+        <label>
+          <span>複利滾動年數 (Horizon)</span>
+          <span id="yearsDisplay">10 年</span>
+        </label>
+        <input type="number" id="yearsInput" value="10" min="1" max="60" step="1">
+        <input type="range" id="yearsSlider" min="1" max="50" step="1" value="10">
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-title">最終預估總資產</div>
+          <div class="summary-value" id="finalValueDisplay">0</div>
+        </div>
+        <div class="summary-card secondary">
+          <div class="summary-title">累計總投入本金 (原始+定期)</div>
+          <div class="summary-value" id="totalPrincipalDisplay" style="color: #cbd5e1;">0</div>
+        </div>
+        <div class="summary-card secondary">
+          <div class="summary-title">累計複利淨收益 (資本利得)</div>
+          <div class="summary-value" id="totalInterestDisplay" style="color: var(--accent-green);">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-box">
+      <canvas id="growthChart"></canvas>
+    </div>
+  </div>
+
+  <!-- 分頁二：財務目標逆推計算 -->
+  <div id="backwardTab" class="tab-content">
+    <div class="goal-banner">
+      <div class="goal-result-title" id="goalResultTitle">達成目標所需要的條件</div>
+      <div class="goal-result-highlight" id="goalResultPrimary">--</div>
+      <div class="goal-desc" id="goalResultSub">請確認下方參數</div>
+    </div>
+
+    <div class="grid">
+      <div class="control-group" style="grid-column: span 2;">
+        <label><span>選擇倒推計算目標</span></label>
+        <select id="goalMode" onchange="calculateGoal()" style="width: 100%;">
+          <option value="solveRate">模式一：給定「每月預計存多少」，反推【需要幾 % 年化報酬率】</option>
+          <option value="solvePmt">模式二：給定「預期報酬率 %」，反推【每個月要存多少錢】</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label><span>未來目標金額 (FV)</span></label>
+        <div class="input-row">
+          <input type="number" id="targetFvInput" value="1000" min="0" step="any" oninput="calculateGoal()">
+          <select id="targetFvMagnitude" onchange="calculateGoal()">
+            <option value="10000">萬</option>
+            <option value="1000000">百萬</option>
+            <option value="100000000">億</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label><span>現在已有本金 (PV)</span></label>
+        <div class="input-row">
+          <input type="number" id="goalPvInput" value="100" min="0" step="any" oninput="calculateGoal()">
+          <select id="goalPvMagnitude" onchange="calculateGoal()">
+            <option value="10000">萬</option>
+            <option value="1000000">百萬</option>
+            <option value="100000000">億</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label><span>預計達成年數 (年)</span></label>
+        <input type="number" id="goalYearsInput" value="10" min="1" max="50" step="1" oninput="calculateGoal()">
+      </div>
+
+      <div class="control-group" id="goalDynamicGroup">
+        <label><span id="goalDynamicLabel">每月預計定期定額投入</span></label>
+        <div class="input-row" id="goalPmtInputContainer">
+          <input type="number" id="goalPmtInput" value="3" min="0" step="any" oninput="calculateGoal()">
+          <select id="goalPmtMagnitude" onchange="calculateGoal()">
+            <option value="1000">千</option>
+            <option value="10000" selected>萬</option>
+            <option value="1000000">百萬</option>
+          </select>
+        </div>
+        <div id="goalRateInputContainer" style="display:none;">
+          <input type="number" id="goalExpectedRate" value="10.5" min="0" max="100" step="0.1" oninput="calculateGoal()" style="width:100%;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 分頁三：價值選股與標的評估 -->
+  <div id="stockTab" class="tab-content">
+    <!-- 市場切換導航列 -->
+    <div class="market-bar">
+      <div style="font-weight: 600; color: #cbd5e1; font-size: 14px;">市場選擇與連動：</div>
+      <div class="market-segmented">
+        <button class="market-btn active" onclick="setMarket('ALL', this)">全部市場</button>
+        <button class="market-btn" onclick="setMarket('TW', this)">台股 (TW)</button>
+        <button class="market-btn" onclick="setMarket('US', this)">美股 (US)</button>
+      </div>
+    </div>
+
+    <!-- 功能子模式切換 -->
+    <div class="submode-bar">
+      <button class="submode-btn active" onclick="setSubmode('defaultMode', this)">🎯 我的核心選股原則 (閉鎖評分體系)</button>
+      <button class="submode-btn" onclick="setSubmode('expertMode', this)">⚙️ 專家自定義篩選器 (自訂門檻)</button>
+    </div>
+
+    <!-- 子功能一：核心選股原則看板 -->
+    <div id="defaultModeContainer">
+      <div class="criteria-box">
+        <div class="criteria-title">📌 核心選股體系邏輯與權重計分說明：</div>
+        <div><strong>基準分 90 分</strong>。必要條件全部通過即達 90 分，<strong>每有一項不符扣 10 分</strong>。</div>
+        <div style="color: #cbd5e1; margin-top: 4px;">
+          <strong>必要條件：</strong>毛利率 &gt; 15%、營益率 &gt; 6%、負債比 &lt; 40%、本淨比(PB) &lt; 3、流動比率 &gt; 150%、速動比率 &gt; 100%、董監持股 &gt; 20%、保留盈餘逐年成長、月營收 &gt; 4億台幣(美股1400萬美元)、無異常收入(排擠處分不動產/匯兌等一次性收益)。美股專屬：ROA &gt; 15%、ROE &gt; 10%。
+        </div>
+        <div style="color: #94a3b8; margin-top: 4px;">
+          <strong>加分項目：</strong>本益比(PE) &lt; 10 (+10分)；其餘非必要條件每符合一項 <strong>+5分</strong>（營收月增 &gt; 0%、營收年增 &gt; 0%、累積營收遞增、5年平均殖利率 &gt; 5%、近10年營收增長 &gt; 33%、股價 &lt; 7年平均營收/EPS倍數、近10年盈利增長 &gt; 33%、股價 &lt; 近3年平均盈利之15倍）。
+        </div>
+      </div>
+
+      <div id="stockListContainer"></div>
+    </div>
+
+    <!-- 子功能二：專家自定義會計指標篩選 -->
+    <div id="expertModeContainer" style="display: none;">
+      <div class="criteria-box">
+        <div class="criteria-title">⚙️ 專家自定義會計篩選條件（數值空白代表不限制）：</div>
+        <div>使用者可在此自訂各項財務門檻，篩選出符合自身風險與價值偏好的個股。</div>
+      </div>
+
+      <div class="expert-grid">
+        <div class="expert-card">
+          <label>毛利率至少 (GPM)</label>
+          <div class="input-unit"><input type="number" id="exp_gpm" placeholder="例如: 15" oninput="renderStocks()"><span>%</span></div>
+        </div>
+        <div class="expert-card">
+          <label>營益率至少 (OPM)</label>
+          <div class="input-unit"><input type="number" id="exp_opm" placeholder="例如: 6" oninput="renderStocks()"><span>%</span></div>
+        </div>
+        <div class="expert-card">
+          <label>負債比率最高 (Debt Ratio)</label>
+          <div class="input-unit"><input type="number" id="exp_debt" placeholder="例如: 40" oninput="renderStocks()"><span>%</span></div>
+        </div>
+        <div class="expert-card">
+          <label>股價淨值比最高 (P/B)</label>
+          <div class="input-unit"><input type="number" id="exp_pb" placeholder="例如: 3.0" step="0.1" oninput="renderStocks()"><span>倍</span></div>
+        </div>
+        <div class="expert-card">
+          <label>流動比率至少 (Current Ratio)</label>
+          <div class="input-unit"><input type="number" id="exp_cr" placeholder="例如: 150" oninput="renderStocks()"><span>%</span></div>
+        </div>
+        <div class="expert-card">
+          <label>速動比率至少 (Quick Ratio)</label>
+          <div class="input-unit"><input type="number" id="exp_qr" placeholder="例如: 100" oninput="renderStocks()"><span>%</span></div>
+        </div>
+        <div class="expert-card">
+          <label>董監持股比例至少</label>
+          <div class="input-unit"><input type="number" id="exp_insider" placeholder="例如: 20" oninput="renderStocks()"><span>%</span></div>
+        </div>
+        <div class="expert-card">
+          <label>本益比最高 (P/E)</label>
+          <div class="input-unit"><input type="number" id="exp_pe" placeholder="例如: 15" oninput="renderStocks()"><span>倍</span></div>
+        </div>
+        <div class="expert-card">
+          <label>5年平均殖利率至少</label>
+          <div class="input-unit"><input type="number" id="exp_yield" placeholder="例如: 5" oninput="renderStocks()"><span>%</span></div>
+        </div>
+        <div class="expert-card">
+          <label>資產報酬率至少 (ROA)</label>
+          <div class="input-unit"><input type="number" id="exp_roa" placeholder="例如: 15" oninput="renderStocks()"><span>%</span></div>
+        </div>
+        <div class="expert-card">
+          <label>股東權益報酬率至少 (ROE)</label>
+          <div class="input-unit"><input type="number" id="exp_roe" placeholder="例如: 10" oninput="renderStocks()"><span>%</span></div>
+        </div>
+      </div>
+
+      <div id="expertStockListContainer"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== 分頁切換 =====
+  function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+    if (tabId === 'forwardTab' && chartInstance) {
+      setTimeout(() => chartInstance.resize(), 50);
+    }
+    if (tabId === 'backwardTab') {
+      calculateGoal();
+    }
+    if (tabId === 'stockTab') {
+      renderStocks();
+    }
+  }
+
+  // ===== 第一分頁：正向模擬計算 =====
+  const pvInput = document.getElementById('pvInput');
+  const currencySelect = document.getElementById('currencySelect');
+  const pvMagnitudeSelect = document.getElementById('pvMagnitudeSelect');
+  const pmtInput = document.getElementById('pmtInput');
+  const pmtMagnitudeSelect = document.getElementById('pmtMagnitudeSelect');
+  const rateSlider = document.getElementById('rateSlider');
+  const rateInput = document.getElementById('rateInput');
+  const yearsSlider = document.getElementById('yearsSlider');
+  const yearsInput = document.getElementById('yearsInput');
+
+  const pvDisplay = document.getElementById('pvDisplay');
+  const pmtDisplay = document.getElementById('pmtDisplay');
+  const rateDisplay = document.getElementById('rateDisplay');
+  const yearsDisplay = document.getElementById('yearsDisplay');
+
+  const finalValueDisplay = document.getElementById('finalValueDisplay');
+  const totalPrincipalDisplay = document.getElementById('totalPrincipalDisplay');
+  const totalInterestDisplay = document.getElementById('totalInterestDisplay');
+
+  let chartInstance = null;
+
+  function applyRate(val) {
+    rateInput.value = val;
+    rateSlider.value = val;
+    calculateTrajectory();
+  }
+
+  function formatMoneyWithUnit(amount, currency) {
+    if (amount >= 100000000) {
+      return (amount / 100000000).toFixed(2) + ' 億 ' + currency;
+    } else if (amount >= 10000) {
+      return (amount / 10000).toFixed(2) + ' 萬 ' + currency;
+    } else {
+      return Math.round(amount).toLocaleString() + ' ' + currency;
+    }
+  }
+
+  function calculateTrajectory() {
+    const rawPv = parseFloat(pvInput.value) || 0;
+    const pvMag = parseFloat(pvMagnitudeSelect.value);
+    const initialPrincipal = rawPv * pvMag;
+
+    const rawPmt = parseFloat(pmtInput.value) || 0;
+    const pmtMag = parseFloat(pmtMagnitudeSelect.value);
+    const monthlyContribution = rawPmt * pmtMag;
+
+    const annualRate = (parseFloat(rateInput.value) || 0) / 100;
+    const monthlyRate = annualRate / 12;
+    const years = parseInt(yearsInput.value, 10) || 1;
+
+    const currency = currencySelect.value;
+    const pvMagText = pvMagnitudeSelect.options[pvMagnitudeSelect.selectedIndex].text;
+    const pmtMagText = pmtMagnitudeSelect.options[pmtMagnitudeSelect.selectedIndex].text;
+
+    pvDisplay.textContent = `${rawPv.toLocaleString()} ${pvMagText}`;
+    pmtDisplay.textContent = `${rawPmt.toLocaleString()} ${pmtMagText}`;
+    rateDisplay.textContent = `${(annualRate * 100).toFixed(1)} %`;
+    yearsDisplay.textContent = `${years} 年`;
+
+    const labels = [];
+    const assetData = [];
+    const principalData = [];
+
+    let currentBalance = initialPrincipal;
+    let accumulatedPrincipal = initialPrincipal;
+
+    labels.push('第 0 年');
+    assetData.push((currentBalance / pvMag).toFixed(2));
+    principalData.push((accumulatedPrincipal / pvMag).toFixed(2));
+
+    for (let y = 1; y <= years; y++) {
+      labels.push(`第 ${y} 年`);
+      for (let m = 1; m <= 12; m++) {
+        currentBalance = (currentBalance + monthlyContribution) * (1 + monthlyRate);
+        accumulatedPrincipal += monthlyContribution;
+      }
+      assetData.push((currentBalance / pvMag).toFixed(2));
+      principalData.push((accumulatedPrincipal / pvMag).toFixed(2));
+    }
+
+    const netInterest = currentBalance - accumulatedPrincipal;
+
+    finalValueDisplay.textContent = formatMoneyWithUnit(currentBalance, currency);
+    totalPrincipalDisplay.textContent = formatMoneyWithUnit(accumulatedPrincipal, currency);
+    totalInterestDisplay.textContent = (netInterest >= 0 ? '+' : '') + formatMoneyWithUnit(netInterest, currency);
+
+    renderChart(labels, assetData, principalData, currency, pvMagText);
+  }
+
+  function renderChart(labels, assetData, principalData, currency, pvMagText) {
+    const ctx = document.getElementById('growthChart').getContext('2d');
+    if (chartInstance) {
+      chartInstance.destroy();
+    }
+
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: `預估總資產 (${pvMagText} ${currency})`,
+            data: assetData,
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.15)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.25,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+            pointBackgroundColor: '#38bdf8'
+          },
+          {
+            label: `累計本金投入 (${pvMagText} ${currency})`,
+            data: principalData,
+            borderColor: '#94a3b8',
+            borderDash: [5, 5],
+            borderWidth: 2,
+            fill: false,
+            tension: 0,
+            pointRadius: 0
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { labels: { color: '#cbd5e1', font: { size: 13 } } },
+          tooltip: {
+            callbacks: {
+              label: function(c) {
+                return ` ${c.dataset.label}: ${Number(c.raw).toLocaleString()} ${pvMagText} ${currency}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+          y: {
+            ticks: {
+              color: '#94a3b8',
+              callback: function(v) { return v.toLocaleString() + ' ' + pvMagText; }
+            },
+            grid: { color: '#334155' }
+          }
+        }
+      }
+    });
+  }
+
+  rateSlider.addEventListener('input', (e) => { rateInput.value = e.target.value; calculateTrajectory(); });
+  rateInput.addEventListener('input', (e) => { rateSlider.value = e.target.value; calculateTrajectory(); });
+  yearsSlider.addEventListener('input', (e) => { yearsInput.value = e.target.value; calculateTrajectory(); });
+  yearsInput.addEventListener('input', (e) => { yearsSlider.value = e.target.value; calculateTrajectory(); });
+  pvInput.addEventListener('input', calculateTrajectory);
+  pmtInput.addEventListener('input', calculateTrajectory);
+  currencySelect.addEventListener('change', calculateTrajectory);
+  pvMagnitudeSelect.addEventListener('change', calculateTrajectory);
+  pmtMagnitudeSelect.addEventListener('change', calculateTrajectory);
+
+  // ===== 第二分頁：目標倒推計算器 =====
+  function calculateGoal() {
+    const mode = document.getElementById('goalMode').value;
+    const targetFv = (parseFloat(document.getElementById('targetFvInput').value) || 0) * parseFloat(document.getElementById('targetFvMagnitude').value);
+    const pv = (parseFloat(document.getElementById('goalPvInput').value) || 0) * parseFloat(document.getElementById('goalPvMagnitude').value);
+    const years = parseFloat(document.getElementById('goalYearsInput').value) || 1;
+    const totalMonths = years * 12;
+
+    const dynamicLabel = document.getElementById('goalDynamicLabel');
+    const pmtContainer = document.getElementById('goalPmtInputContainer');
+    const rateContainer = document.getElementById('goalRateInputContainer');
+    const resTitle = document.getElementById('goalResultTitle');
+    const resPrimary = document.getElementById('goalResultPrimary');
+    const resSub = document.getElementById('goalResultSub');
+
+    if (targetFv <= pv) {
+      resTitle.textContent = "目前現有資金已達到或超越目標金額";
+      resPrimary.textContent = "已達標！";
+      resSub.textContent = `現有資金已有 ${(pv/10000).toFixed(1)} 萬，目標為 ${(targetFv/10000).toFixed(1)} 萬。`;
+      return;
+    }
+
+    if (mode === 'solveRate') {
+      dynamicLabel.textContent = "每月預計定期定額投入";
+      pmtContainer.style.display = "flex";
+      rateContainer.style.display = "none";
+
+      const pmt = (parseFloat(document.getElementById('goalPmtInput').value) || 0) * parseFloat(document.getElementById('goalPmtMagnitude').value);
+
+      function calcFutureVal(annualR) {
+        const mRate = annualR / 12;
+        let bal = pv;
+        for (let m = 0; m < totalMonths; m++) {
+          bal = (bal + pmt) * (1 + mRate);
+        }
+        return bal;
+      }
+
+      let low = -0.05, high = 5.0;
+      let iter = 0;
+      let foundR = 0;
+
+      while (iter < 80) {
+        let mid = (low + high) / 2;
+        let fvMid = calcFutureVal(mid);
+        if (Math.abs(fvMid - targetFv) < 1) {
+          foundR = mid;
+          break;
+        }
+        if (fvMid < targetFv) {
+          low = mid;
+        } else {
+          high = mid;
+        }
+        foundR = mid;
+        iter++;
+      }
+
+      const reqRate = (foundR * 100).toFixed(1);
+      resTitle.textContent = `在 ${years} 年內達到目標所需的年化投資報酬率：`;
+      resPrimary.textContent = `${reqRate} %`;
+
+      let marketHint = "";
+      if (foundR <= 0.04) marketHint = "定存或高評級債券即可達成。";
+      else if (foundR <= 0.09) marketHint = "可透過全球大盤型 ETF (如 VT) 達成。";
+      else if (foundR <= 0.12) marketHint = "接近標普 500 或台股大盤指數的長期年化水準。";
+      else if (foundR <= 0.18) marketHint = "需要科技龍頭指數或高護城河價值成長股方可實現。";
+      else marketHint = "要求報酬極高，建議增加每月定期定額金額或延長投資年數以降低波動風險。";
+
+      resSub.textContent = `現有 ${(pv/10000).toLocaleString()} 萬，每月固定投入 ${(pmt/10000).toLocaleString()} 萬。標的提示：${marketHint}`;
+
+    } else {
+      dynamicLabel.textContent = "預期年化報酬率 (%)";
+      pmtContainer.style.display = "none";
+      rateContainer.style.display = "block";
+
+      const expRate = (parseFloat(document.getElementById('goalExpectedRate').value) || 0) / 100;
+      const mRate = expRate / 12;
+
+      const pvFuture = pv * Math.pow(1 + mRate, totalMonths);
+      const remainingTarget = targetFv - pvFuture;
+
+      if (remainingTarget <= 0) {
+        resTitle.textContent = "單靠初始本金自然複利即可達標！";
+        resPrimary.textContent = "$0 / 月";
+        resSub.textContent = `在年化 ${(expRate*100).toFixed(1)}% 複利下，本金 ${(pv/10000).toLocaleString()} 萬在第 ${years} 年自然成長為 ${(pvFuture/10000).toFixed(1)} 萬。`;
+        return;
+      }
+
+      let reqPmt = 0;
+      if (mRate === 0) {
+        reqPmt = remainingTarget / totalMonths;
+      } else {
+        const factor = (1 + mRate) * (Math.pow(1 + mRate, totalMonths) - 1) / mRate;
+        reqPmt = remainingTarget / factor;
+      }
+
+      resTitle.textContent = `在預期年化 ${(expRate * 100).toFixed(1)}% 下，每個月必須投入：`;
+      resPrimary.textContent = reqPmt >= 10000 ? `${(reqPmt / 10000).toFixed(2)} 萬元` : `${Math.round(reqPmt).toLocaleString()} 元`;
+      resSub.textContent = `每年固定本金投入 ${(reqPmt * 12 / 10000).toFixed(1)} 萬，${years} 年累計自行提撥 ${(reqPmt * totalMonths / 10000).toFixed(1)} 萬。`;
+    }
+  }
+
+  // ===== 第三分頁：價值選股與標的評估模組 =====
+  let currentMarket = 'ALL'; // 'ALL', 'TW', 'US'
+  let currentSubmode = 'defaultMode'; // 'defaultMode', 'expertMode'
+
+  // 標的資料庫（可持續擴充與更新會計項目）
+  const stockDatabase = [
+    {
+      symbol: "2330",
+      name: "台積電 (TSMC)",
+      market: "TW",
+      gpm: 53.2,
+      opm: 42.1,
+      debtRatio: 34.5,
+      pb: 4.8,
+      pe: 18.5,
+      currentRatio: 220,
+      quickRatio: 195,
+      insiderHold: 32.5,
+      retainedEarningsGrowth: true,
+      monthlyRevenueNTD: 2100, // 億元
+      noAnomalousIncome: true,
+      revenueMoMGrowth: true,
+      revenueYoYGrowth: true,
+      accumulatedRevGrowth: true,
+      fiveYearAvgYield: 2.2,
+      tenYearRevUpOneThird: true,
+      priceBelow7yrMultiple: false,
+      tenYearProfitUpOneThird: true,
+      priceBelow3yrAvg15x: false,
+      roa: 19.8,
+      roe: 27.5,
+      thesis: "全球先進製程代工獨佔龍頭，毛利率常態大於 50%，負債比極度健康，自由現金流龐大。雖然本淨比受市場給予高估值而高於標準，但資產負債表堅不可摧。"
+    },
+    {
+      symbol: "2308",
+      name: "台達電 (Delta)",
+      market: "TW",
+      gpm: 29.8,
+      opm: 10.4,
+      debtRatio: 38.2,
+      pb: 2.7,
+      pe: 17.2,
+      currentRatio: 185,
+      quickRatio: 135,
+      insiderHold: 24.1,
+      retainedEarningsGrowth: true,
+      monthlyRevenueNTD: 350, // 億元
+      noAnomalousIncome: true,
+      revenueMoMGrowth: true,
+      revenueYoYGrowth: true,
+      accumulatedRevGrowth: true,
+      fiveYearAvgYield: 3.2,
+      tenYearRevUpOneThird: true,
+      priceBelow7yrMultiple: true,
+      tenYearProfitUpOneThird: true,
+      priceBelow3yrAvg15x: true,
+      roa: 10.2,
+      roe: 16.5,
+      thesis: "全球電源供應器龍頭，在 AI 伺服器電源與散熱解決方案佔據關鍵利基，財務體質穩健，董監持股過關，近十年營收與獲利皆階梯式擴張。"
+    },
+    {
+      symbol: "GOOGL",
+      name: "Alphabet (Google)",
+      market: "US",
+      gpm: 57.5,
+      opm: 29.8,
+      debtRatio: 28.1,
+      pb: 6.2,
+      pe: 22.0,
+      currentRatio: 210,
+      quickRatio: 205,
+      insiderHold: 21.5,
+      retainedEarningsGrowth: true,
+      monthlyRevenueNTD: 2300, // 換算等值台幣億元
+      noAnomalousIncome: true,
+      revenueMoMGrowth: true,
+      revenueYoYGrowth: true,
+      accumulatedRevGrowth: true,
+      fiveYearAvgYield: 0.5,
+      tenYearRevUpOneThird: true,
+      priceBelow7yrMultiple: false,
+      tenYearProfitUpOneThird: true,
+      priceBelow3yrAvg15x: false,
+      roa: 19.5,
+      roe: 28.2,
+      thesis: "搜尋引擎與影音平台霸主，資產負債表幾乎無淨負債，擁有充沛自由現金流與雲端事業高成長性，符合 ROA>15% 與 ROE>10% 之嚴格美股標準。"
+    },
+    {
+      symbol: "BRK.B",
+      name: "波克夏海瑟威 (Berkshire Hathaway)",
+      market: "US",
+      gpm: 38.0,
+      opm: 18.5,
+      debtRatio: 18.2,
+      pb: 1.5,
+      pe: 16.0,
+      currentRatio: 175,
+      quickRatio: 160,
+      insiderHold: 31.0,
+      retainedEarningsGrowth: true,
+      monthlyRevenueNTD: 2800,
+      noAnomalousIncome: true,
+      revenueMoMGrowth: false,
+      revenueYoYGrowth: true,
+      accumulatedRevGrowth: true,
+      fiveYearAvgYield: 0.0,
+      tenYearRevUpOneThird: true,
+      priceBelow7yrMultiple: true,
+      tenYearProfitUpOneThird: true,
+      priceBelow3yrAvg15x: true,
+      roa: 11.2,
+      roe: 13.5,
+      thesis: "終極堡壘型企業，保留盈餘長年全數再投資複合成長，手握超過千億美元現金抗週期波動，本淨比僅 1.5 倍，兼具防禦與價值成長。"
+    }
+  ];
+
+  function setMarket(mkt, btn) {
+    currentMarket = mkt;
+    document.querySelectorAll('.market-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderStocks();
+  }
+
+  function setSubmode(sub, btn) {
+    currentSubmode = sub;
+    document.querySelectorAll('.submode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (sub === 'defaultMode') {
+      document.getElementById('defaultModeContainer').style.display = 'block';
+      document.getElementById('expertModeContainer').style.display = 'none';
+    } else {
+      document.getElementById('defaultModeContainer').style.display = 'none';
+      document.getElementById('expertModeContainer').style.display = 'block';
+    }
+    renderStocks();
+  }
+
+  // 計算核心評分體系（基準90，漏一扣10，加分項+5/+10）
+  function evaluateStock(stock) {
+    let score = 90;
+    const necessaryLogs = [];
+    const bonusLogs = [];
+
+    // 1. 毛利率 > 15%
+    if (stock.gpm > 15) necessaryLogs.push({ text: `毛利率 ${stock.gpm}% (>15%)`, pass: true });
+    else { necessaryLogs.push({ text: `毛利率 ${stock.gpm}% (未達15%)`, pass: false }); score -= 10; }
+
+    // 2. 營益率 > 6%
+    if (stock.opm > 6) necessaryLogs.push({ text: `營益率 ${stock.opm}% (>6%)`, pass: true });
+    else { necessaryLogs.push({ text: `營益率 ${stock.opm}% (未達6%)`, pass: false }); score -= 10; }
+
+    // 3. 負債比 < 40%
+    if (stock.debtRatio < 40) necessaryLogs.push({ text: `負債比 ${stock.debtRatio}% (<40%)`, pass: true });
+    else { necessaryLogs.push({ text: `負債比 ${stock.debtRatio}% (超過40%)`, pass: false }); score -= 10; }
+
+    // 4. 股價淨值比 PB < 3
+    if (stock.pb < 3) necessaryLogs.push({ text: `PB ${stock.pb} (<3)`, pass: true });
+    else { necessaryLogs.push({ text: `PB ${stock.pb} (高於3)`, pass: false }); score -= 10; }
+
+    // 5. 流動比率 > 150%
+    if (stock.currentRatio > 150) necessaryLogs.push({ text: `流動比率 ${stock.currentRatio}% (>150%)`, pass: true });
+    else { necessaryLogs.push({ text: `流動比率 ${stock.currentRatio}% (未達150%)`, pass: false }); score -= 10; }
+
+    // 6. 速動比率 > 100%
+    if (stock.quickRatio > 100) necessaryLogs.push({ text: `速動比率 ${stock.quickRatio}% (>100%)`, pass: true });
+    else { necessaryLogs.push({ text: `速動比率 ${stock.quickRatio}% (未達100%)`, pass: false }); score -= 10; }
+
+    // 7. 董監持股 > 20%
+    if (stock.insiderHold > 20) necessaryLogs.push({ text: `董監持股 ${stock.insiderHold}% (>20%)`, pass: true });
+    else { necessaryLogs.push({ text: `董監持股 ${stock.insiderHold}% (未達20%)`, pass: false }); score -= 10; }
+
+    // 8. 保留盈餘逐年成長
+    if (stock.retainedEarningsGrowth) necessaryLogs.push({ text: `保留盈餘穩健擴增`, pass: true });
+    else { necessaryLogs.push({ text: `保留盈餘衰退`, pass: false }); score -= 10; }
+
+    // 9. 月營收 > 4億台幣 (約 1400 萬美元)
+    if (stock.monthlyRevenueNTD >= 4) necessaryLogs.push({ text: `月營收達標(規模充足)`, pass: true });
+    else { necessaryLogs.push({ text: `月營收規模不足`, pass: false }); score -= 10; }
+
+    // 10. 無異常收入
+    if (stock.noAnomalousIncome) necessaryLogs.push({ text: `無異常收入/本業純`, pass: true });
+    else { necessaryLogs.push({ text: `業外/匯損/處分波動過大`, pass: false }); score -= 10; }
+
+    // 美股專屬必要條件
+    if (stock.market === 'US') {
+      if (stock.roa > 15) necessaryLogs.push({ text: `ROA ${stock.roa}% (>15%)`, pass: true });
+      else { necessaryLogs.push({ text: `ROA ${stock.roa}% (美股門檻未達15%)`, pass: false }); score -= 10; }
+
+      if (stock.roe > 10) necessaryLogs.push({ text: `ROE ${stock.roe}% (>10%)`, pass: true });
+      else { necessaryLogs.push({ text: `ROE ${stock.roe}% (美股門檻未達10%)`, pass: false }); score -= 10; }
+    }
+
+    // 加分條件計算
+    // PE < 10 加 10 分
+    if (stock.pe < 10) { score += 10; bonusLogs.push(`PE ${stock.pe} (<10) [+10]`); }
+    if (stock.revenueMoMGrowth) { score += 5; bonusLogs.push(`營收月增成長 [+5]`); }
+    if (stock.revenueYoYGrowth) { score += 5; bonusLogs.push(`營收年增成長 [+5]`); }
+    if (stock.accumulatedRevGrowth) { score += 5; bonusLogs.push(`累計營收遞增 [+5]`); }
+    if (stock.fiveYearAvgYield > 5) { score += 5; bonusLogs.push(`5年殖利率 ${stock.fiveYearAvgYield}% (>5%) [+5]`); }
+    if (stock.tenYearRevUpOneThird) { score += 5; bonusLogs.push(`近10年營收增長>1/3 [+5]`); }
+    if (stock.priceBelow7yrMultiple) { score += 5; bonusLogs.push(`股價低於7年營收/EPS均值倍數 [+5]`); }
+    if (stock.tenYearProfitUpOneThird) { score += 5; bonusLogs.push(`近10年盈利增長>1/3 [+5]`); }
+    if (stock.priceBelow3yrAvg15x) { score += 5; bonusLogs.push(`股價<近3年均利15倍 [+5]`); }
+
+    return { score, necessaryLogs, bonusLogs };
+  }
+
+  function renderStocks() {
+    const listContainer = document.getElementById('stockListContainer');
+    const expertContainer = document.getElementById('expertStockListContainer');
+
+    // 過濾市場
+    const filtered = stockDatabase.filter(s => currentMarket === 'ALL' || s.market === currentMarket);
+
+    // 1. 渲染核心清單
+    let html = "";
+    filtered.forEach(stock => {
+      const evalRes = evaluateStock(stock);
+      let scoreColor = "var(--accent-green)";
+      if (evalRes.score < 80) scoreColor = "var(--accent-yellow)";
+      if (evalRes.score < 60) scoreColor = "var(--accent-red)";
+
+      html += `
+        <div class="stock-card">
+          <div class="stock-header">
+            <div>
+              <span class="stock-symbol">${stock.symbol}</span>
+              <span class="stock-name">${stock.name}</span>
+              <span class="${stock.market === 'TW' ? 'badge-tw' : 'badge-us'}">${stock.market === 'TW' ? '台股' : '美股'}</span>
+            </div>
+            <div class="stock-score-badge" style="background: rgba(255,255,255,0.05); color: ${scoreColor}; border: 1px solid ${scoreColor};">
+              評分：${evalRes.score} 分
+            </div>
+          </div>
+
+          <div class="tags-container">
+            ${evalRes.necessaryLogs.map(item => `
+              <span class="metric-tag ${item.pass ? 'pass' : 'fail'}">${item.text}</span>
+            `).join('')}
+            ${evalRes.bonusLogs.map(text => `
+              <span class="metric-tag bonus">${text}</span>
+            `).join('')}
+          </div>
+
+          <div class="reason-box">
+            <strong>選股理由與護城河解構：</strong>${stock.thesis}
+          </div>
+        </div>
+      `;
+    });
+    listContainer.innerHTML = html || "<div style='color: var(--text-sub); text-align:center; padding: 20px;'>無符合市場標的</div>";
+
+    // 2. 渲染專家自定義篩選
+    const exp_gpm = parseFloat(document.getElementById('exp_gpm').value);
+    const exp_opm = parseFloat(document.getElementById('exp_opm').value);
+    const exp_debt = parseFloat(document.getElementById('exp_debt').value);
+    const exp_pb = parseFloat(document.getElementById('exp_pb').value);
+    const exp_cr = parseFloat(document.getElementById('exp_cr').value);
+    const exp_qr = parseFloat(document.getElementById('exp_qr').value);
+    const exp_insider = parseFloat(document.getElementById('exp_insider').value);
+    const exp_pe = parseFloat(document.getElementById('exp_pe').value);
+    const exp_yield = parseFloat(document.getElementById('exp_yield').value);
+    const exp_roa = parseFloat(document.getElementById('exp_roa').value);
+    const exp_roe = parseFloat(document.getElementById('exp_roe').value);
+
+    const expertFiltered = filtered.filter(stock => {
+      if (!isNaN(exp_gpm) && stock.gpm < exp_gpm) return false;
+      if (!isNaN(exp_opm) && stock.opm < exp_opm) return false;
+      if (!isNaN(exp_debt) && stock.debtRatio > exp_debt) return false;
+      if (!isNaN(exp_pb) && stock.pb > exp_pb) return false;
+      if (!isNaN(exp_cr) && stock.currentRatio < exp_cr) return false;
+      if (!isNaN(exp_qr) && stock.quickRatio < exp_qr) return false;
+      if (!isNaN(exp_insider) && stock.insiderHold < exp_insider) return false;
+      if (!isNaN(exp_pe) && stock.pe > exp_pe) return false;
+      if (!isNaN(exp_yield) && stock.fiveYearAvgYield < exp_yield) return false;
+      if (!isNaN(exp_roa) && stock.roa < exp_roa) return false;
+      if (!isNaN(exp_roe) && stock.roe < exp_roe) return false;
+      return true;
+    });
+
+    let expHtml = "";
+    expertFiltered.forEach(stock => {
+      expHtml += `
+        <div class="stock-card">
+          <div class="stock-header">
+            <div>
+              <span class="stock-symbol">${stock.symbol}</span>
+              <span class="stock-name">${stock.name}</span>
+              <span class="${stock.market === 'TW' ? 'badge-tw' : 'badge-us'}">${stock.market === 'TW' ? '台股' : '美股'}</span>
+            </div>
+            <div style="font-size: 13px; color: var(--accent);">通過自訂指標篩選</div>
+          </div>
+          <div class="tags-container">
+            <span class="metric-tag pass">毛利率: ${stock.gpm}%</span>
+            <span class="metric-tag pass">營益率: ${stock.opm}%</span>
+            <span class="metric-tag pass">負債比: ${stock.debtRatio}%</span>
+            <span class="metric-tag pass">P/B: ${stock.pb}</span>
+            <span class="metric-tag pass">P/E: ${stock.pe}</span>
+            <span class="metric-tag pass">流動比: ${stock.currentRatio}%</span>
+            <span class="metric-tag pass">速動比: ${stock.quickRatio}%</span>
+            <span class="metric-tag pass">董監持股: ${stock.insiderHold}%</span>
+          </div>
+          <div class="reason-box">
+            <strong>公司護城河概覽：</strong>${stock.thesis}
+          </div>
+        </div>
+      `;
+    });
+    expertContainer.innerHTML = expHtml || "<div style='color: var(--text-sub); text-align:center; padding: 20px;'>無符合自定義條件的標的，請嘗試放寬數值門檻。</div>";
+  }
+
+  // 初始載入各功能
+  calculateTrajectory();
+  calculateGoal();
+  renderStocks();
+</script>
+
+</body>
+</html>
