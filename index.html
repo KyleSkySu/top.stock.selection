@@ -255,7 +255,7 @@
       color: #cbd5e1;
     }
     .search-input {
-      min-width: 240px;
+      min-width: 260px;
     }
     .submode-bar {
       display: flex;
@@ -308,6 +308,19 @@
       flex-wrap: wrap;
       gap: 8px;
     }
+    .stock-title-link {
+      color: inherit;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .stock-title-link:hover .stock-symbol,
+    .stock-title-link:hover .stock-name {
+      color: #38bdf8;
+      text-decoration: underline;
+    }
     .stock-symbol {
       font-size: 18px;
       font-weight: 800;
@@ -316,7 +329,6 @@
     .stock-name {
       font-size: 15px;
       color: #cbd5e1;
-      margin-left: 8px;
     }
     .stock-score-badge {
       padding: 6px 14px;
@@ -333,14 +345,22 @@
       font-weight: 600;
       margin-left: 6px;
     }
-    .badge-exchange {
-      background: #047857;
-      color: #a7f3d0;
+    .badge-exchange-link {
+      background: #064e3b;
+      color: #6ee7b7;
+      border: 1px solid #047857;
       padding: 2px 8px;
       border-radius: 4px;
       font-size: 11px;
       font-weight: 600;
       margin-left: 4px;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.15s ease;
+    }
+    .badge-exchange-link:hover {
+      background: #047857;
+      color: #ffffff;
     }
     .tags-container {
       display: flex;
@@ -385,17 +405,6 @@
       flex-wrap: wrap;
       gap: 6px;
     }
-    .official-link {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .official-link:hover {
-      text-decoration: underline;
-    }
     .expert-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -426,7 +435,6 @@
 <body>
 
 <div class="container">
-  <!-- 頁首與語系切換 -->
   <div class="top-header">
     <h2 id="ui_title">Global Value Investing & Trajectory System</h2>
     <div class="lang-select-wrap">
@@ -443,14 +451,13 @@
     </div>
   </div>
 
-  <!-- 導航切換按鈕 -->
   <div class="tabs">
     <button class="tab-btn active" id="tab_btn_1" onclick="switchTab('forwardTab', this)">動態複利模擬與回測</button>
     <button class="tab-btn" id="tab_btn_2" onclick="switchTab('backwardTab', this)">財務目標逆推計算</button>
     <button class="tab-btn" id="tab_btn_3" onclick="switchTab('stockTab', this)">價值選股與標的評估</button>
   </div>
 
-  <!-- 分頁一：動態複利模擬與簡易回測 -->
+  <!-- 分頁一：動態複利模擬 -->
   <div id="forwardTab" class="tab-content active">
     <div class="grid">
       <div class="preset-container">
@@ -539,7 +546,7 @@
     </div>
   </div>
 
-  <!-- 分頁二：財務目標逆推計算 -->
+  <!-- 分頁二：目標倒推計算器 -->
   <div id="backwardTab" class="tab-content">
     <div class="goal-banner">
       <div class="goal-result-title" id="goalResultTitle">達成目標所需要的條件</div>
@@ -604,20 +611,40 @@
 
   <!-- 分頁三：價值選股與標的評估 -->
   <div id="stockTab" class="tab-content">
-    <!-- 頂部綜合搜尋與篩選列 -->
     <div class="filter-dashboard">
       <div class="filter-row">
-        <!-- 即時搜尋框 -->
+        <!-- 搜尋輸入框 -->
         <div class="filter-item" style="flex: 1;">
           <span id="ui_search_label">🔍 個股即時搜尋：</span>
-          <input type="text" id="stockSearchInput" class="search-input" placeholder="輸入股票代碼或名稱 (如 2330, NVDA, Google...)" oninput="renderStocks()">
+          <input type="text" id="stockSearchInput" class="search-input" placeholder="代碼或名稱 (如 2330, 6285, 2059, NVDA...)" oninput="renderStocks()">
         </div>
 
-        <!-- 國家與區域選擇 -->
+        <!-- 區域/國家選擇 -->
         <div class="filter-item">
           <span id="ui_region_label">🌍 區域/國家：</span>
           <select id="countrySelect" onchange="renderStocks()" style="min-width: 140px;">
             <option value="ALL">🌐 全球 (全部市場)</option>
+            <optgroup label="美洲區域 (Americas)">
+              <option value="US">美國</option>
+              <option value="Canada">加拿大</option>
+              <option value="South_America">南美洲</option>
+            </optgroup>
+            <optgroup label="亞洲與中東 (Asia & Middle East)">
+              <option value="Taiwan">台灣</option>
+              <option value="Japan">日本</option>
+              <option value="Korea">韓國</option>
+              <option value="China">大陸</option>
+              <option value="HongKong">香港</option>
+              <option value="Singapore">新加坡</option>
+              <option value="India">印度</option>
+              <option value="Vietnam">越南</option>
+              <option value="Indonesia">印尼</option>
+              <option value="Arab">阿拉伯 (UAE/沙烏地)</option>
+              <option value="Iran">伊朗</option>
+              <option value="Israel">以色列</option>
+              <option value="Central_Asia">中亞</option>
+              <option value="Mongolia">蒙古</option>
+            </optgroup>
             <optgroup label="歐洲區域 (Europe)">
               <option value="Europe_All">歐洲 (全選)</option>
               <option value="Northern_Europe">北歐</option>
@@ -630,27 +657,6 @@
               <option value="France">法國</option>
               <option value="UK">英國</option>
             </optgroup>
-            <optgroup label="美洲區域 (Americas)">
-              <option value="US">美國</option>
-              <option value="Canada">加拿大</option>
-              <option value="South_America">南美洲</option>
-            </optgroup>
-            <optgroup label="亞洲與中東 (Asia & Middle East)">
-              <option value="Taiwan">台灣</option>
-              <option value="China">大陸</option>
-              <option value="HongKong">香港</option>
-              <option value="Japan">日本</option>
-              <option value="Korea">韓國</option>
-              <option value="Singapore">新加坡</option>
-              <option value="India">印度</option>
-              <option value="Vietnam">越南</option>
-              <option value="Indonesia">印尼</option>
-              <option value="Arab">阿拉伯 (UAE/沙烏地)</option>
-              <option value="Iran">伊朗</option>
-              <option value="Israel">以色列</option>
-              <option value="Central_Asia">中亞</option>
-              <option value="Mongolia">蒙古</option>
-            </optgroup>
             <optgroup label="大洋洲與其他 (Others)">
               <option value="Australia">澳洲</option>
               <option value="Russia">俄羅斯</option>
@@ -659,7 +665,7 @@
           </select>
         </div>
 
-        <!-- 顯示家數下拉選單 -->
+        <!-- 排名家數上限 -->
         <div class="filter-item">
           <span id="ui_limit_label">📊 顯示排行家數：</span>
           <select id="limitSelect" onchange="renderStocks()">
@@ -673,17 +679,17 @@
       </div>
     </div>
 
-    <!-- 功能子模式切換 -->
+    <!-- 子模式切換 -->
     <div class="submode-bar">
       <button class="submode-btn active" id="sub_btn_expert" onclick="setSubmode('defaultMode', this)">🎯 專家核心選股原則 (閉鎖評分體系)</button>
       <button class="submode-btn" id="sub_btn_custom" onclick="setSubmode('expertMode', this)">⚙️ 我的自定義篩選器 (自訂會計門檻)</button>
     </div>
 
-    <!-- 子功能一：專家核心選股原則看板 -->
+    <!-- 模式一：專家核心評分 -->
     <div id="defaultModeContainer">
       <div class="criteria-box">
         <div class="criteria-title" id="ui_exp_rule_title">📌 專家核心選股體系邏輯與權重計分說明：</div>
-        <div id="ui_exp_rule_1"><strong>基準分 90 分</strong>。必要條件全部通過即達 90 分，<strong>每有一項不符扣 10 分</strong>。</div>
+        <div id="ui_exp_rule_1"><strong>基準分 90 分</strong>。必要條件全部通過即達 90 分，<strong>每有一項不符扣 10 分</strong>（不論得分高低皆依排行填滿名額）。</div>
         <div style="color: #cbd5e1; margin-top: 4px;" id="ui_exp_rule_2">
           <strong>必要條件：</strong>毛利率 &gt; 15%、營益率 &gt; 6%、負債比 &lt; 40%、本淨比(PB) &lt; 3、流動比率 &gt; 150%、速動比率 &gt; 100%、董監持股 &gt; 20%、保留盈餘逐年成長、月營收 &gt; 4億台幣(美股1400萬美元)、無異常收入(排擠處分不動產/匯兌等一次性收益)。美股專屬：ROA &gt; 15%、ROE &gt; 10%。
         </div>
@@ -695,7 +701,7 @@
       <div id="stockListContainer"></div>
     </div>
 
-    <!-- 子功能二：我的自定義會計指標篩選 -->
+    <!-- 模式二：我的自定義篩選器 -->
     <div id="expertModeContainer" style="display: none;">
       <div class="criteria-box">
         <div class="criteria-title" id="ui_custom_rule_title">⚙️ 我的自定義會計篩選條件（數值空白代表不限制）：</div>
@@ -704,47 +710,47 @@
 
       <div class="expert-grid">
         <div class="expert-card">
-          <label id="lbl_gpm">毛利率至少 (GPM)</label>
+          <label>毛利率至少 (GPM)</label>
           <div class="input-unit"><input type="number" id="exp_gpm" placeholder="例如: 15" oninput="renderStocks()"><span>%</span></div>
         </div>
         <div class="expert-card">
-          <label id="lbl_opm">營益率至少 (OPM)</label>
+          <label>營益率至少 (OPM)</label>
           <div class="input-unit"><input type="number" id="exp_opm" placeholder="例如: 6" oninput="renderStocks()"><span>%</span></div>
         </div>
         <div class="expert-card">
-          <label id="lbl_debt">負債比率最高 (Debt Ratio)</label>
+          <label>負債比率最高 (Debt Ratio)</label>
           <div class="input-unit"><input type="number" id="exp_debt" placeholder="例如: 40" oninput="renderStocks()"><span>%</span></div>
         </div>
         <div class="expert-card">
-          <label id="lbl_pb">股價淨值比最高 (P/B)</label>
+          <label>股價淨值比最高 (P/B)</label>
           <div class="input-unit"><input type="number" id="exp_pb" placeholder="例如: 3.0" step="0.1" oninput="renderStocks()"><span>倍</span></div>
         </div>
         <div class="expert-card">
-          <label id="lbl_cr">流動比率至少 (Current Ratio)</label>
+          <label>流動比率至少 (Current Ratio)</label>
           <div class="input-unit"><input type="number" id="exp_cr" placeholder="例如: 150" oninput="renderStocks()"><span>%</span></div>
         </div>
         <div class="expert-card">
-          <label id="lbl_qr">速動比率至少 (Quick Ratio)</label>
+          <label>速動比率至少 (Quick Ratio)</label>
           <div class="input-unit"><input type="number" id="exp_qr" placeholder="例如: 100" oninput="renderStocks()"><span>%</span></div>
         </div>
         <div class="expert-card">
-          <label id="lbl_insider">董監持股比例至少</label>
+          <label>董監持股比例至少</label>
           <div class="input-unit"><input type="number" id="exp_insider" placeholder="例如: 20" oninput="renderStocks()"><span>%</span></div>
         </div>
         <div class="expert-card">
-          <label id="lbl_pe">本益比最高 (P/E)</label>
+          <label>本益比最高 (P/E)</label>
           <div class="input-unit"><input type="number" id="exp_pe" placeholder="例如: 15" oninput="renderStocks()"><span>倍</span></div>
         </div>
         <div class="expert-card">
-          <label id="lbl_yield">5年平均殖利率至少</label>
+          <label>5年平均殖利率至少</label>
           <div class="input-unit"><input type="number" id="exp_yield" placeholder="例如: 5" oninput="renderStocks()"><span>%</span></div>
         </div>
         <div class="expert-card">
-          <label id="lbl_roa">資產報酬率至少 (ROA)</label>
+          <label>資產報酬率至少 (ROA)</label>
           <div class="input-unit"><input type="number" id="exp_roa" placeholder="例如: 15" oninput="renderStocks()"><span>%</span></div>
         </div>
         <div class="expert-card">
-          <label id="lbl_roe">股東權益報酬率至少 (ROE)</label>
+          <label>股東權益報酬率至少 (ROE)</label>
           <div class="input-unit"><input type="number" id="exp_roe" placeholder="例如: 10" oninput="renderStocks()"><span>%</span></div>
         </div>
       </div>
@@ -755,7 +761,7 @@
 </div>
 
 <script>
-  // ===== 多國語系字典對照表 =====
+  // ===== 多國語系字典 =====
   const i18n = {
     "zh-TW": {
       title: "投資動態模擬、目標倒推與價值選股系統",
@@ -763,20 +769,19 @@
       tab2: "財務目標逆推計算",
       tab3: "價值選股與標的評估",
       searchLabel: "🔍 個股即時搜尋：",
-      searchPlaceholder: "輸入股票代碼或名稱 (如 2330, NVDA, Google...)",
+      searchPlaceholder: "代碼或名稱 (如 2330, 6285, 2059, NVDA...)",
       regionLabel: "🌍 區域/國家：",
       limitLabel: "📊 顯示排行家數：",
       subBtnExpert: "🎯 專家核心選股原則 (閉鎖評分體系)",
       subBtnCustom: "⚙️ 我的自定義篩選器 (自訂會計門檻)",
       ruleTitle: "📌 專家核心選股體系邏輯與權重計分說明：",
-      rule1: "<strong>基準分 90 分</strong>。必要條件全部通過即達 90 分，<strong>每有一項不符扣 10 分</strong>。",
+      rule1: "<strong>基準分 90 分</strong>。必要條件全部通過即達 90 分，<strong>每有一項不符扣 10 分</strong>（不論得分高低皆依排行填滿名額）。",
       rule2: "<strong>必要條件：</strong>毛利率 > 15%、營益率 > 6%、負債比 < 40%、本淨比(PB) < 3、流動比率 > 150%、速動比率 > 100%、董監持股 > 20%、保留盈餘逐年成長、月營收 > 4億台幣(美股1400萬美元)、無異常收入(排擠處分不動產/匯兌等一次性收益)。美股專屬：ROA > 15%、ROE > 10%。",
-      rule3: "<strong>加分項目：</strong>本益比(PE) < 10 (+10分)；其餘非必要條件每符合一項 <strong>+5分</strong>（營收月增 > 0%、營收年增 > 0%、累積營收遞增、5年平均殖利率 > 5%、近10年營收增長 > 33%、股價 < 7年平均營收/EPS倍數、近10年盈利增長 > 33%、股價 < 近3年平均盈利之15倍）。",
+      rule3: "<strong>加分項目：</strong>本益比(PE) < 10 (+10分)；其餘非必要條件每符合一項 <strong>+5分</strong>。",
       customRuleTitle: "⚙️ 我的自定義會計篩選條件（數值空白代表不限制）：",
       customRuleDesc: "使用者可在此自行輸入專屬會計標準與門檻，即時過濾全球標的。",
       scoreText: "評分",
-      exchangeLabel: "掛牌交易所",
-      websiteBtn: "造訪官方網站 ↗",
+      exchangeLabel: "掛牌交易所 (點擊查看報價)",
       thesisLabel: "專家選股理由與護城河解構："
     },
     "en": {
@@ -785,20 +790,19 @@
       tab2: "Goal-Seeking Solver",
       tab3: "Value Stock Evaluator",
       searchLabel: "🔍 Real-time Search:",
-      searchPlaceholder: "Enter ticker or company name...",
+      searchPlaceholder: "Ticker or Name (e.g. 2330, 6285, NVDA...)",
       regionLabel: "🌍 Region/Country:",
       limitLabel: "📊 Top Results Limit:",
       subBtnExpert: "🎯 Expert Fundamental Rules (Scoring Model)",
       subBtnCustom: "⚙️ My Custom Screener (Custom Accounting)",
       ruleTitle: "📌 Expert Core Methodology & Scoring Framework:",
-      rule1: "<strong>Base Score: 90 pts</strong>. Passing all mandatory criteria gives 90. <strong>-10 pts for each failed rule</strong>.",
+      rule1: "<strong>Base Score: 90 pts</strong>. Passing all mandatory rules gives 90. <strong>-10 pts for each failed rule</strong> (fills rankings regardless of score).",
       rule2: "<strong>Mandatory Rules:</strong> GPM > 15%, OPM > 6%, Debt < 40%, P/B < 3, Current Ratio > 150%, Quick Ratio > 100%, Insider > 20%, Retained Earnings Growth, Monthly Rev > NT$400M ($14M), No anomalous income. US Stocks: ROA > 15%, ROE > 10%.",
       rule3: "<strong>Bonus:</strong> P/E < 10 (+10 pts); other bonus criteria give <strong>+5 pts each</strong>.",
       customRuleTitle: "⚙️ My Custom Accounting Criteria (Blank = Unrestricted):",
       customRuleDesc: "Enter your own fundamental filters to screen global assets in real time.",
       scoreText: "Score",
-      exchangeLabel: "Listed Exchanges",
-      websiteBtn: "Official Website ↗",
+      exchangeLabel: "Listed Exchanges (Click for Quotes)",
       thesisLabel: "Investment Thesis & Moat Analysis:"
     },
     "zh-CN": {
@@ -807,20 +811,19 @@
       tab2: "财务目标逆推计算",
       tab3: "价值选股与标的评估",
       searchLabel: "🔍 个股即时搜索：",
-      searchPlaceholder: "输入股票代码或名称...",
+      searchPlaceholder: "代码或名称 (如 2330, 6285, NVDA...)",
       regionLabel: "🌍 区域/国家：",
       limitLabel: "📊 显示排行家数：",
       subBtnExpert: "🎯 专家核心选股原则 (闭锁评分体系)",
       subBtnCustom: "⚙️ 我的自定义筛选器 (自订会计门槛)",
       ruleTitle: "📌 专家核心选股体系逻辑与权重计分说明：",
-      rule1: "<strong>基准分 90 分</strong>。必要条件全部通过即达 90 分，<strong>每有一项不符扣 10 分</strong>。",
-      rule2: "<strong>必要条件：</strong>毛利率 > 15%、营业利润率 > 6%、负债率 < 40%、市净率(PB) < 3、流动比率 > 150%、速动比率 > 100%、高管持股 > 20%、未分配利润稳健增长、月营收达标、无异常一次性收益。美股专属：ROA > 15%、ROE > 10%。",
+      rule1: "<strong>基准分 90 分</strong>。必要条件全部通过即达 90 分，<strong>每有一项不符扣 10 分</strong>（不限分数高低排满名额）。",
+      rule2: "<strong>必要条件：</strong>毛利率 > 15%、营业利润率 > 6%、负债率 < 40%、市净率(PB) < 3、流动比率 > 150%、速动比率 > 100%、高管持股 > 20%、未分配利润增长、月营收达标、无异常一次性收益。美股专属：ROA > 15%、ROE > 10%。",
       rule3: "<strong>加分项：</strong>市盈率(PE) < 10 (+10分)；其余非必要条件每符合一项 <strong>+5分</strong>。",
       customRuleTitle: "⚙️ 我的自定义会计筛选条件（空白代表不限制）：",
       customRuleDesc: "使用者可在此自行输入专属会计标准，即时过滤全球标的。",
       scoreText: "评分",
-      exchangeLabel: "挂牌交易所",
-      websiteBtn: "访问官方网站 ↗",
+      exchangeLabel: "挂牌交易所 (点击查看行情)",
       thesisLabel: "专家选股逻辑与护城河解构："
     },
     "ja": {
@@ -829,20 +832,19 @@
       tab2: "目標逆算ソルバー",
       tab3: "バリュー株スクリーナー",
       searchLabel: "🔍 銘柄リアルタイム検索：",
-      searchPlaceholder: "ティッカーまたは企業名を入力...",
+      searchPlaceholder: "ティッカーまたは企業名...",
       regionLabel: "🌍 地域・国：",
       limitLabel: "📊 表示件数上限：",
       subBtnExpert: "🎯 専門家コア選定基準（スコアリング）",
       subBtnCustom: "⚙️ マイクライテリア（自由設定）",
       ruleTitle: "📌 専門家スコアリング体系のロジック：",
-      rule1: "<strong>基準スコア 90点</strong>。必須条件を全てクリアで90点、<strong>未達ごとに-10点</strong>。",
-      rule2: "<strong>必須条件：</strong>売上総利益率 > 15%、営業利益率 > 6%、負債比率 < 40%、PBR < 3、流動比率 > 150%、当座比率 > 100%、インサイダー保有 > 20%など。",
-      rule3: "<strong>加点項目：</strong>PER < 10 (+10点)；その他の成長項目ごとに <strong>+5点</strong>。",
+      rule1: "<strong>基準スコア 90点</strong>。必須条件クリアで90点、<strong>未達ごとに-10点</strong>（点数に関係なく順位を埋めます）。",
+      rule2: "<strong>必須条件：</strong>売上総利益率 > 15%、営業利益率 > 6%、負債比率 < 40%、PBR < 3、流動比率 > 150%、当座比率 > 100%など。",
+      rule3: "<strong>加点項目：</strong>PER < 10 (+10点)；その他項目ごとに <strong>+5点</strong>。",
       customRuleTitle: "⚙️ マイクライテリア設定（空白は制限なし）：",
-      customRuleDesc: "独自の会計基準を設定し、世界中の銘柄を瞬時に抽出します。",
+      customRuleDesc: "独自の会計基準を設定し、世界中の銘柄を抽出します。",
       scoreText: "スコア",
-      exchangeLabel: "上場証券取引所",
-      websiteBtn: "公式ウェブサイト ↗",
+      exchangeLabel: "上場証券取引所 (クリックで相場へ)",
       thesisLabel: "投資テーゼと競争優位性の分析："
     },
     "ko": {
@@ -851,42 +853,40 @@
       tab2: "재무 목표 역산 계산기",
       tab3: "가치주 선별 및 평가",
       searchLabel: "🔍 실시간 종목 검색:",
-      searchPlaceholder: "종목 코드 또는 회사명 입력...",
+      searchPlaceholder: "종목 코드 또는 회사명...",
       regionLabel: "🌍 지역/국가:",
       limitLabel: "📊 표시 개수:",
       subBtnExpert: "🎯 전문가 핵심 선정 원칙 (평가 모델)",
       subBtnCustom: "⚙️ 사용자 정의 필터 (맞춤형 기준)",
       ruleTitle: "📌 전문가 가치투자 스코어링 모델 설명:",
-      rule1: "<strong>기본 점수 90점</strong>. 모든 필수 조건을 통과하면 90점, <strong>불합격 항목당 -10점</strong>.",
+      rule1: "<strong>기본 점수 90점</strong>。필수 조건 통과 시 90점, <strong>미달 항목당 -10점</strong>(점수와 무관하게 순위를 채웁니다).",
       rule2: "<strong>필수 조건:</strong> 매출총이익률 > 15%, 영업이익률 > 6%, 부채비율 < 40%, PBR < 3, 유동비율 > 150%, 당좌비율 > 100% 등.",
-      rule3: "<strong>가산점:</strong> PER < 10 (+10점), 기타 비필수 조건 충족당 <strong>+5점</strong>.",
+      rule3: "<strong>가산점:</strong> PER < 10 (+10점), 기타 조건당 <strong>+5점</strong>.",
       customRuleTitle: "⚙️ 사용자 정의 회계 조건 (빈칸은 제한 없음):",
-      customRuleDesc: "원하는 회계 지표를 직접 입력하여 전 세계 종목을 선별합니다.",
+      customRuleDesc: "원하는 지표를 직접 입력하여 종목을 선별합니다.",
       scoreText: "점수",
-      exchangeLabel: "상장 거래소",
-      websiteBtn: "공식 웹사이트 ↗",
+      exchangeLabel: "상장 거래소 (시세 바로가기)",
       thesisLabel: "투자 논리 및 경제적 해자 분석:"
     },
     "ru": {
-      title: "Симулятор сложных процентов и фундаментальный скринер акций",
+      title: "Симулятор сложных процентов и фундаментальный скринер",
       tab1: "Симулятор доходности",
       tab2: "Расчет финансовых целей",
       tab3: "Фундаментальный скринер акций",
       searchLabel: "🔍 Поиск акций:",
-      searchPlaceholder: "Введите тикер или компанию...",
+      searchPlaceholder: "Тикер или название...",
       regionLabel: "🌍 Регион/Страна:",
       limitLabel: "📊 Показать топ:",
-      subBtnExpert: "🎯 Экспертная скоринговая модель",
+      subBtnExpert: "🎯 Экспертная модель оценки",
       subBtnCustom: "⚙️ Пользовательский фильтр",
       ruleTitle: "📌 Экспертная методология оценки:",
-      rule1: "<strong>Базовый балл 90</strong>. При выполнении всех обязательных критериев — 90. <strong>-10 баллов за каждое нарушение</strong>.",
-      rule2: "<strong>Обязательно:</strong> Валовая маржа > 15%, Опер. маржа > 6%, Долг < 40%, P/B < 3, Коэф. текущей ликвидности > 150% и др.",
-      rule3: "<strong>Бонус:</strong> P/E < 10 (+10 баллов), остальные бонусы дают <strong>+5 баллов</strong>.",
+      rule1: "<strong>Базовый балл 90</strong>. Выполнение обязательных правил дает 90. <strong>-10 баллов за каждое нарушение</strong>.",
+      rule2: "<strong>Обязательно:</strong> Валовая маржа > 15%, Опер. маржа > 6%, Долг < 40%, P/B < 3, Ликвидность > 150% и др.",
+      rule3: "<strong>Бонус:</strong> P/E < 10 (+10 баллов), прочие бонусы дают <strong>+5 баллов</strong>.",
       customRuleTitle: "⚙️ Пользовательские финансовые критерии:",
-      customRuleDesc: "Задайте свои параметры для отбора мировых компаний.",
+      customRuleDesc: "Задайте свои параметры для отбора мировых акций.",
       scoreText: "Баллы",
-      exchangeLabel: "Биржи листинга",
-      websiteBtn: "Официальный сайт ↗",
+      exchangeLabel: "Биржи (нажмите для котировок)",
       thesisLabel: "Инвестиционный тезис и экономический ров:"
     },
     "de": {
@@ -901,14 +901,13 @@
       subBtnExpert: "🎯 Experten-Kriterien (Scoring-System)",
       subBtnCustom: "⚙️ Eigener Screener (Benutzerdefiniert)",
       ruleTitle: "📌 Experten-Methodik und Scoring-Modell:",
-      rule1: "<strong>Basis-Score: 90 Punkte</strong>. Alle Pflichtkriterien bestanden = 90. <strong>-10 Pkt. für jedes verfehlte Kriterium</strong>.",
+      rule1: "<strong>Basis-Score: 90 Punkte</strong>. Pflichtkriterien bestanden = 90. <strong>-10 Pkt. für jedes verfehlte Kriterium</strong>.",
       rule2: "<strong>Pflichtkriterien:</strong> Bruttomarge > 15%, EBIT-Marge > 6%, Verschuldung < 40%, KBV < 3, Liquidität > 150% usw.",
       rule3: "<strong>Bonuspunkte:</strong> KGV < 10 (+10 Pkt.), weitere Bonuskriterien bringen <strong>+5 Pkt.</strong>.",
       customRuleTitle: "⚙️ Benutzerdefinierte Bilanz-Kriterien:",
       customRuleDesc: "Definieren Sie eigene Filter zur weltweiten Aktienauswahl.",
       scoreText: "Score",
-      exchangeLabel: "Börsennotierung",
-      websiteBtn: "Offizielle Website ↗",
+      exchangeLabel: "Börsennotierung (Klicken für Kurs)",
       thesisLabel: "Investitionsthese & Burggraben-Analyse:"
     }
   };
@@ -939,7 +938,6 @@
     renderStocks();
   }
 
-  // ===== 分頁切換 =====
   function switchTab(tabId, btn) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -956,7 +954,7 @@
     }
   }
 
-  // ===== 第一分頁：正向模擬計算 =====
+  // ===== 第一分頁：正向模擬 =====
   const pvInput = document.getElementById('pvInput');
   const currencySelect = document.getElementById('currencySelect');
   const pvMagnitudeSelect = document.getElementById('pvMagnitudeSelect');
@@ -1119,7 +1117,7 @@
   pvMagnitudeSelect.addEventListener('change', calculateTrajectory);
   pmtMagnitudeSelect.addEventListener('change', calculateTrajectory);
 
-  // ===== 第二分頁：目標倒推計算器 =====
+  // ===== 第二分頁：目標倒推 =====
   function calculateGoal() {
     const mode = document.getElementById('goalMode').value;
     const targetFv = (parseFloat(document.getElementById('targetFvInput').value) || 0) * parseFloat(document.getElementById('targetFvMagnitude').value);
@@ -1225,96 +1223,164 @@
   // ===== 第三分頁：價值選股與標的評估模組 =====
   let currentSubmode = 'defaultMode';
 
-  // 全球涵蓋示範資料庫（包含掛牌交易所與官方網站）
+  // 深度擴充之全球與台灣核心標的資料庫
   const stockDatabase = [
+    // --- 台灣精選標的 (涵蓋半導體、AI、網通衛星、關鍵組件、綠能、傳產) ---
     {
       symbol: "2330",
       name: "台積電 (TSMC)",
       country: "Taiwan",
       region: "Asia",
-      exchanges: ["TWSE: 2330", "NYSE: TSM"],
+      exchanges: [
+        { name: "TWSE: 2330", url: "https://finance.yahoo.com/quote/2330.TW" },
+        { name: "NYSE: TSM", url: "https://finance.yahoo.com/quote/TSM" }
+      ],
       website: "https://www.tsmc.com",
-      gpm: 53.2,
-      opm: 42.1,
-      debtRatio: 34.5,
-      pb: 4.8,
-      pe: 18.5,
-      currentRatio: 220,
-      quickRatio: 195,
-      insiderHold: 32.5,
-      retainedEarningsGrowth: true,
-      monthlyRevenueNTD: 2100,
-      noAnomalousIncome: true,
-      revenueMoMGrowth: true,
-      revenueYoYGrowth: true,
-      accumulatedRevGrowth: true,
-      fiveYearAvgYield: 2.2,
-      tenYearRevUpOneThird: true,
-      priceBelow7yrMultiple: false,
-      tenYearProfitUpOneThird: true,
-      priceBelow3yrAvg15x: false,
-      roa: 19.8,
-      roe: 27.5,
-      thesis: "全球先進製程晶圓代工獨佔龍頭，毛利率常態突破 50%，現金儲備豐厚，自由現金流堅固。"
+      gpm: 53.5, opm: 42.5, debtRatio: 33.5, pb: 4.9, pe: 18.2,
+      currentRatio: 225, quickRatio: 198, insiderHold: 32.5,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 2150, noAnomalousIncome: true,
+      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
+      fiveYearAvgYield: 2.1, tenYearRevUpOneThird: true, priceBelow7yrMultiple: false,
+      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: false, roa: 20.1, roe: 28.5,
+      thesis: "先進製程晶圓代工市佔逾 90%，具備強大定價權與龐大自由現金流，護城河極深。"
     },
     {
       symbol: "2308",
-      name: "台達電 (Delta Electronics)",
+      name: "台達電 (Delta)",
       country: "Taiwan",
       region: "Asia",
-      exchanges: ["TWSE: 2308"],
+      exchanges: [
+        { name: "TWSE: 2308", url: "https://finance.yahoo.com/quote/2308.TW" }
+      ],
       website: "https://www.deltaww.com",
-      gpm: 29.8,
-      opm: 10.4,
-      debtRatio: 38.2,
-      pb: 2.7,
-      pe: 17.2,
-      currentRatio: 185,
-      quickRatio: 135,
-      insiderHold: 24.1,
-      retainedEarningsGrowth: true,
-      monthlyRevenueNTD: 350,
-      noAnomalousIncome: true,
-      revenueMoMGrowth: true,
-      revenueYoYGrowth: true,
-      accumulatedRevGrowth: true,
-      fiveYearAvgYield: 3.2,
-      tenYearRevUpOneThird: true,
-      priceBelow7yrMultiple: true,
-      tenYearProfitUpOneThird: true,
-      priceBelow3yrAvg15x: true,
-      roa: 10.2,
-      roe: 16.5,
-      thesis: "全球電源供應器龍頭，在 AI 高階伺服器電源與液冷散熱模組具備關鍵定價權，長線營收穩定遞增。"
+      gpm: 30.2, opm: 10.8, debtRatio: 37.8, pb: 2.8, pe: 17.5,
+      currentRatio: 188, quickRatio: 138, insiderHold: 24.1,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 360, noAnomalousIncome: true,
+      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
+      fiveYearAvgYield: 3.2, tenYearRevUpOneThird: true, priceBelow7yrMultiple: true,
+      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: true, roa: 10.5, roe: 16.8,
+      thesis: "全球電源供應器與散熱方案龍頭，在 AI 高壓電源、液冷與自動化設備掌握核心規格。"
     },
+    {
+      symbol: "6285",
+      name: "啟碁 (WNC)",
+      country: "Taiwan",
+      region: "Asia",
+      exchanges: [
+        { name: "TWSE: 6285", url: "https://finance.yahoo.com/quote/6285.TW" }
+      ],
+      website: "https://www.wnc.com.tw",
+      gpm: 12.8, opm: 4.2, debtRatio: 58.5, pb: 1.8, pe: 11.5,
+      currentRatio: 142, quickRatio: 92, insiderHold: 25.8,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 95, noAnomalousIncome: true,
+      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
+      fiveYearAvgYield: 4.8, tenYearRevUpOneThird: true, priceBelow7yrMultiple: true,
+      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: true, roa: 5.8, roe: 14.2,
+      thesis: "低軌衛星地面接收站、Wi-Fi 7 與車用車載通訊主要系統供應商，營收規模擴展迅速。"
+    },
+    {
+      symbol: "2059",
+      name: "川湖 (King Slide)",
+      country: "Taiwan",
+      region: "Asia",
+      exchanges: [
+        { name: "TWSE: 2059", url: "https://finance.yahoo.com/quote/2059.TW" }
+      ],
+      website: "https://www.kingslide.com",
+      gpm: 65.4, opm: 54.2, debtRatio: 16.2, pb: 4.2, pe: 21.0,
+      currentRatio: 450, quickRatio: 380, insiderHold: 38.5,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 8.5, noAnomalousIncome: true,
+      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
+      fiveYearAvgYield: 3.5, tenYearRevUpOneThird: true, priceBelow7yrMultiple: false,
+      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: false, roa: 18.5, roe: 23.2,
+      thesis: "全球 AI 伺服器滑軌專利霸主，毛利率突破 60%，幾乎無負債，資產負債表極度健全。"
+    },
+    {
+      symbol: "2454",
+      name: "聯發科 (MediaTek)",
+      country: "Taiwan",
+      region: "Asia",
+      exchanges: [
+        { name: "TWSE: 2454", url: "https://finance.yahoo.com/quote/2454.TW" }
+      ],
+      website: "https://www.mediatek.tw",
+      gpm: 48.5, opm: 19.8, debtRatio: 31.2, pb: 3.6, pe: 16.8,
+      currentRatio: 210, quickRatio: 175, insiderHold: 22.4,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 420, noAnomalousIncome: true,
+      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
+      fiveYearAvgYield: 6.2, tenYearRevUpOneThird: true, priceBelow7yrMultiple: true,
+      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: true, roa: 14.8, roe: 22.5,
+      thesis: "行動晶片與邊緣 AI 處理器龍頭，配息政策慷慨，5 年平均殖利率超過 6%。"
+    },
+    {
+      symbol: "1519",
+      name: "華城 (Fortune Electric)",
+      country: "Taiwan",
+      region: "Asia",
+      exchanges: [
+        { name: "TWSE: 1519", url: "https://finance.yahoo.com/quote/1519.TW" }
+      ],
+      website: "https://www.fortune.com.tw",
+      gpm: 34.8, opm: 21.5, debtRatio: 52.0, pb: 12.5, pe: 28.5,
+      currentRatio: 162, quickRatio: 105, insiderHold: 36.2,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 18.5, noAnomalousIncome: true,
+      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
+      fiveYearAvgYield: 2.2, tenYearRevUpOneThird: true, priceBelow7yrMultiple: false,
+      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: false, roa: 15.2, roe: 36.0,
+      thesis: "外銷美國變壓器與電網升級主力，在手訂單能見度高，受惠全球電網汰換大週期。"
+    },
+    {
+      symbol: "2317",
+      name: "鴻海 (Foxconn)",
+      country: "Taiwan",
+      region: "Asia",
+      exchanges: [
+        { name: "TWSE: 2317", url: "https://finance.yahoo.com/quote/2317.TW" }
+      ],
+      website: "https://www.honhai.com",
+      gpm: 6.4, opm: 2.9, debtRatio: 56.2, pb: 1.4, pe: 11.2,
+      currentRatio: 155, quickRatio: 112, insiderHold: 20.5,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 5500, noAnomalousIncome: true,
+      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
+      fiveYearAvgYield: 5.1, tenYearRevUpOneThird: true, priceBelow7yrMultiple: true,
+      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: true, roa: 4.2, roe: 10.8,
+      thesis: "全球電子製造代工巨擘，垂直整合能力強，在 AI 伺服器機櫃組裝佔據龐大市佔份額。"
+    },
+    {
+      symbol: "2382",
+      name: "廣達 (Quanta)",
+      country: "Taiwan",
+      region: "Asia",
+      exchanges: [
+        { name: "TWSE: 2382", url: "https://finance.yahoo.com/quote/2382.TW" }
+      ],
+      website: "https://www.quantatw.com",
+      gpm: 8.2, opm: 4.6, debtRatio: 64.0, pb: 3.8, pe: 15.2,
+      currentRatio: 148, quickRatio: 102, insiderHold: 28.5,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 1100, noAnomalousIncome: true,
+      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
+      fiveYearAvgYield: 4.5, tenYearRevUpOneThird: true, priceBelow7yrMultiple: false,
+      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: false, roa: 6.8, roe: 24.5,
+      thesis: "一線雲端 CSP 巨頭主要伺服器 ODM 夥伴，高階運算系統出貨量居全球領先地位。"
+    },
+
+    // --- 美國及國際重要標的 ---
     {
       symbol: "GOOGL",
       name: "Alphabet Inc. (Google)",
       country: "US",
       region: "Americas",
-      exchanges: ["NASDAQ: GOOGL", "XETRA: ABEA"],
+      exchanges: [
+        { name: "NASDAQ: GOOGL", url: "https://finance.yahoo.com/quote/GOOGL" },
+        { name: "XETRA: ABEA", url: "https://finance.yahoo.com/quote/ABEA.DE" }
+      ],
       website: "https://abc.xyz",
-      gpm: 57.5,
-      opm: 29.8,
-      debtRatio: 28.1,
-      pb: 6.2,
-      pe: 22.0,
-      currentRatio: 210,
-      quickRatio: 205,
-      insiderHold: 21.5,
-      retainedEarningsGrowth: true,
-      monthlyRevenueNTD: 2300,
-      noAnomalousIncome: true,
-      revenueMoMGrowth: true,
-      revenueYoYGrowth: true,
-      accumulatedRevGrowth: true,
-      fiveYearAvgYield: 0.5,
-      tenYearRevUpOneThird: true,
-      priceBelow7yrMultiple: false,
-      tenYearProfitUpOneThird: true,
-      priceBelow3yrAvg15x: false,
-      roa: 19.5,
-      roe: 28.2,
+      gpm: 57.5, opm: 29.8, debtRatio: 28.1, pb: 6.2, pe: 22.0,
+      currentRatio: 210, quickRatio: 205, insiderHold: 21.5,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 2300, noAnomalousIncome: true,
+      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
+      fiveYearAvgYield: 0.5, tenYearRevUpOneThird: true, priceBelow7yrMultiple: false,
+      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: false, roa: 19.5, roe: 28.2,
       thesis: "搜尋引擎與雲端基礎設施霸主，負債比率極低，具備強大技術壁壘與充沛自由現金流。"
     },
     {
@@ -1322,150 +1388,124 @@
       name: "Berkshire Hathaway",
       country: "US",
       region: "Americas",
-      exchanges: ["NYSE: BRK.A / BRK.B"],
+      exchanges: [
+        { name: "NYSE: BRK.B", url: "https://finance.yahoo.com/quote/BRK-B" }
+      ],
       website: "https://www.berkshirehathaway.com",
-      gpm: 38.0,
-      opm: 18.5,
-      debtRatio: 18.2,
-      pb: 1.5,
-      pe: 16.0,
-      currentRatio: 175,
-      quickRatio: 160,
-      insiderHold: 31.0,
-      retainedEarningsGrowth: true,
-      monthlyRevenueNTD: 2800,
-      noAnomalousIncome: true,
-      revenueMoMGrowth: false,
-      revenueYoYGrowth: true,
-      accumulatedRevGrowth: true,
-      fiveYearAvgYield: 0.0,
-      tenYearRevUpOneThird: true,
-      priceBelow7yrMultiple: true,
-      tenYearProfitUpOneThird: true,
-      priceBelow3yrAvg15x: true,
-      roa: 11.2,
-      roe: 13.5,
-      thesis: "終極堡壘型多元投資控股集團，保留盈餘複合成長超過半世紀，手握龐大現金兼具防禦與價值。"
+      gpm: 38.0, opm: 18.5, debtRatio: 18.2, pb: 1.5, pe: 16.0,
+      currentRatio: 175, quickRatio: 160, insiderHold: 31.0,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 2800, noAnomalousIncome: true,
+      revenueMoMGrowth: false, revenueYoYGrowth: true, accumulatedRevGrowth: true,
+      fiveYearAvgYield: 0.0, tenYearRevUpOneThird: true, priceBelow7yrMultiple: true,
+      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: true, roa: 11.2, roe: 13.5,
+      thesis: "終極堡壘型多元投資控股集團，保留盈餘長年全數再投資，手握逾千億美金現金。"
+    },
+    {
+      symbol: "NVDA",
+      name: "NVIDIA Corporation",
+      country: "US",
+      region: "Americas",
+      exchanges: [
+        { name: "NASDAQ: NVDA", url: "https://finance.yahoo.com/quote/NVDA" }
+      ],
+      website: "https://www.nvidia.com",
+      gpm: 75.2, opm: 62.1, debtRatio: 22.4, pb: 26.5, pe: 38.2,
+      currentRatio: 350, quickRatio: 310, insiderHold: 20.8,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 2900, noAnomalousIncome: true,
+      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
+      fiveYearAvgYield: 0.1, tenYearRevUpOneThird: true, priceBelow7yrMultiple: false,
+      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: false, roa: 48.0, roe: 85.0,
+      thesis: "加速運算與 GPU 領域絕對霸主，CUDA 軟硬體生態系統構成難以逾越的護城河。"
+    },
+    {
+      symbol: "CCJ",
+      name: "Cameco Corporation",
+      country: "Canada",
+      region: "Americas",
+      exchanges: [
+        { name: "NYSE: CCJ", url: "https://finance.yahoo.com/quote/CCJ" },
+        { name: "TSX: CCO", url: "https://finance.yahoo.com/quote/CCO.TO" }
+      ],
+      website: "https://www.cameco.com",
+      gpm: 28.5, opm: 16.2, debtRatio: 21.0, pb: 3.2, pe: 32.0,
+      currentRatio: 260, quickRatio: 210, insiderHold: 22.0,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 85, noAnomalousIncome: true,
+      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
+      fiveYearAvgYield: 0.8, tenYearRevUpOneThird: true, priceBelow7yrMultiple: false,
+      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: false, roa: 7.2, roe: 10.5,
+      thesis: "全球第二大天然鈾礦生產商，在核能復興與低碳基載電力大趨勢下擁有關鍵資源寡占地位。"
     },
     {
       symbol: "ASML",
       name: "ASML Holding",
       country: "Western_Europe",
       region: "Europe",
-      exchanges: ["Euronext Amsterdam: ASML", "NASDAQ: ASML"],
+      exchanges: [
+        { name: "AMS: ASML", url: "https://finance.yahoo.com/quote/ASML.AS" },
+        { name: "NASDAQ: ASML", url: "https://finance.yahoo.com/quote/ASML" }
+      ],
       website: "https://www.asml.com",
-      gpm: 51.3,
-      opm: 31.5,
-      debtRatio: 36.4,
-      pb: 18.2,
-      pe: 34.0,
-      currentRatio: 165,
-      quickRatio: 110,
-      insiderHold: 28.0,
-      retainedEarningsGrowth: true,
-      monthlyRevenueNTD: 850,
-      noAnomalousIncome: true,
-      revenueMoMGrowth: true,
-      revenueYoYGrowth: true,
-      accumulatedRevGrowth: true,
-      fiveYearAvgYield: 1.4,
-      tenYearRevUpOneThird: true,
-      priceBelow7yrMultiple: false,
-      tenYearProfitUpOneThird: true,
-      priceBelow3yrAvg15x: false,
-      roa: 21.0,
-      roe: 48.0,
-      thesis: "荷蘭極紫外光(EUV)光刻機全球獨佔製造商，半導體產業鏈無可替代的絕對護城河。"
+      gpm: 51.3, opm: 31.5, debtRatio: 36.4, pb: 18.2, pe: 34.0,
+      currentRatio: 165, quickRatio: 110, insiderHold: 28.0,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 850, noAnomalousIncome: true,
+      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
+      fiveYearAvgYield: 1.4, tenYearRevUpOneThird: true, priceBelow7yrMultiple: false,
+      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: false, roa: 21.0, roe: 48.0,
+      thesis: "荷蘭極紫外光(EUV)光刻機全球獨佔製造商，半導體產業鏈無可替代的關鍵基石。"
     },
     {
       symbol: "SAP",
       name: "SAP SE",
       country: "Germany",
       region: "Europe",
-      exchanges: ["Frankfurt (XETRA): SAP", "NYSE: SAP"],
+      exchanges: [
+        { name: "XETRA: SAP", url: "https://finance.yahoo.com/quote/SAP.DE" },
+        { name: "NYSE: SAP", url: "https://finance.yahoo.com/quote/SAP" }
+      ],
       website: "https://www.sap.com",
-      gpm: 72.5,
-      opm: 23.4,
-      debtRatio: 29.8,
-      pb: 3.8,
-      pe: 28.5,
-      currentRatio: 155,
-      quickRatio: 150,
-      insiderHold: 22.0,
-      retainedEarningsGrowth: true,
-      monthlyRevenueNTD: 920,
-      noAnomalousIncome: true,
-      revenueMoMGrowth: true,
-      revenueYoYGrowth: true,
-      accumulatedRevGrowth: true,
-      fiveYearAvgYield: 1.8,
-      tenYearRevUpOneThird: true,
-      priceBelow7yrMultiple: false,
-      tenYearProfitUpOneThird: true,
-      priceBelow3yrAvg15x: false,
-      roa: 9.5,
-      roe: 14.8,
-      thesis: "德國最大企業級軟體巨頭，高黏著度 ERP 系統擁有極高的客戶轉換成本與穩定雲端經常性收入。"
+      gpm: 72.5, opm: 23.4, debtRatio: 29.8, pb: 3.8, pe: 28.5,
+      currentRatio: 155, quickRatio: 150, insiderHold: 22.0,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 920, noAnomalousIncome: true,
+      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
+      fiveYearAvgYield: 1.8, tenYearRevUpOneThird: true, priceBelow7yrMultiple: false,
+      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: false, roa: 9.5, roe: 14.8,
+      thesis: "歐洲最大企業級 ERP 軟體巨頭，客戶轉換成本極高，雲端經常性訂閱收入穩步攀升。"
     },
     {
       symbol: "7203",
       name: "Toyota Motor (豐田汽車)",
       country: "Japan",
       region: "Asia",
-      exchanges: ["Tokyo (TYO): 7203", "NYSE: TM", "LSE: TYT"],
+      exchanges: [
+        { name: "TYO: 7203", url: "https://finance.yahoo.com/quote/7203.T" },
+        { name: "NYSE: TM", url: "https://finance.yahoo.com/quote/TM" }
+      ],
       website: "https://global.toyota",
-      gpm: 21.2,
-      opm: 11.2,
-      debtRatio: 38.8,
-      pb: 1.1,
-      pe: 9.2,
-      currentRatio: 152,
-      quickRatio: 118,
-      insiderHold: 24.5,
-      retainedEarningsGrowth: true,
-      monthlyRevenueNTD: 3200,
-      noAnomalousIncome: true,
-      revenueMoMGrowth: true,
-      revenueYoYGrowth: true,
-      accumulatedRevGrowth: true,
-      fiveYearAvgYield: 3.5,
-      tenYearRevUpOneThird: true,
-      priceBelow7yrMultiple: true,
-      tenYearProfitUpOneThird: true,
-      priceBelow3yrAvg15x: true,
-      roa: 6.8,
-      roe: 14.5,
-      thesis: "全球銷量第一大車廠，油電混合車市場利基穩固，本益比低於 10 且本淨比接近 1 倍，評價具防禦吸引力。"
+      gpm: 21.2, opm: 11.2, debtRatio: 38.8, pb: 1.1, pe: 9.2,
+      currentRatio: 152, quickRatio: 118, insiderHold: 24.5,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 3200, noAnomalousIncome: true,
+      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
+      fiveYearAvgYield: 3.5, tenYearRevUpOneThird: true, priceBelow7yrMultiple: true,
+      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: true, roa: 6.8, roe: 14.5,
+      thesis: "全球銷量第一大車廠，油電混合車市場壁壘深厚，PE低於10且PB接近1倍，估值安全。"
     },
     {
       symbol: "005930",
       name: "Samsung Electronics (三星電子)",
       country: "Korea",
       region: "Asia",
-      exchanges: ["KRX: 005930", "LSE: SMSN"],
+      exchanges: [
+        { name: "KRX: 005930", url: "https://finance.yahoo.com/quote/005930.KS" },
+        { name: "LSE: SMSN", url: "https://finance.yahoo.com/quote/SMSN.L" }
+      ],
       website: "https://www.samsung.com",
-      gpm: 37.8,
-      opm: 14.2,
-      debtRatio: 25.1,
-      pb: 1.3,
-      pe: 12.8,
-      currentRatio: 240,
-      quickRatio: 195,
-      insiderHold: 21.8,
-      retainedEarningsGrowth: true,
-      monthlyRevenueNTD: 2400,
-      noAnomalousIncome: true,
-      revenueMoMGrowth: true,
-      revenueYoYGrowth: true,
-      accumulatedRevGrowth: true,
-      fiveYearAvgYield: 2.8,
-      tenYearRevUpOneThird: true,
-      priceBelow7yrMultiple: true,
-      tenYearProfitUpOneThird: true,
-      priceBelow3yrAvg15x: false,
-      roa: 8.5,
-      roe: 12.1,
-      thesis: "全球記憶體 DRAM/NAND 龍頭，資產負債表極度健全，手握龐大現金並在消費電子擁有全球通道優勢。"
+      gpm: 37.8, opm: 14.2, debtRatio: 25.1, pb: 1.3, pe: 12.8,
+      currentRatio: 240, quickRatio: 195, insiderHold: 21.8,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 2400, noAnomalousIncome: true,
+      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
+      fiveYearAvgYield: 2.8, tenYearRevUpOneThird: true, priceBelow7yrMultiple: true,
+      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: false, roa: 8.5, roe: 12.1,
+      thesis: "記憶體 DRAM/NAND 市佔領先，現金流豐沛且資產負債表堅如磐石。"
     }
   ];
 
@@ -1483,7 +1523,7 @@
     renderStocks();
   }
 
-  // 專家核心評分體系（基準90分，漏一項扣10分，加分項+5/+10）
+  // 專家核心評分體系（基準90分，每漏一項必要條件扣10分，非必要條件加分制）
   function evaluateStock(stock) {
     let score = 90;
     const necessaryLogs = [];
@@ -1560,14 +1600,12 @@
     const limit = parseInt(document.getElementById('limitSelect').value, 10) || 20;
     const t = i18n[currentLang] || i18n['zh-TW'];
 
-    // 國家與區域篩選邏輯
+    // 國家/區域與關鍵字即時過濾
     let filtered = stockDatabase.filter(stock => {
-      // 國家 / 區域過濾
       if (selectedCountry !== 'ALL') {
         if (selectedCountry === 'Europe_All' && stock.region !== 'Europe') return false;
         else if (selectedCountry !== 'Europe_All' && stock.country !== selectedCountry) return false;
       }
-      // 即時關鍵字搜尋過濾
       if (searchTerm) {
         const matchesSymbol = stock.symbol.toLowerCase().includes(searchTerm);
         const matchesName = stock.name.toLowerCase().includes(searchTerm);
@@ -1576,27 +1614,34 @@
       return true;
     });
 
-    // 評分並依分數高低排序
+    // 評分並一律填滿給定數量（即便低於 90 分也完整排入）
     const scoredList = filtered.map(stock => {
       const evalRes = evaluateStock(stock);
       return { ...stock, ...evalRes };
     }).sort((a, b) => b.score - a.score).slice(0, limit);
 
-    // 1. 渲染專家核心原則清單
+    // 1. 專家核心原則清單渲染
     let html = "";
     scoredList.forEach(stock => {
       let scoreColor = "var(--accent-green)";
       if (stock.score < 80) scoreColor = "var(--accent-yellow)";
       if (stock.score < 60) scoreColor = "var(--accent-red)";
 
-      const exchangeBadges = stock.exchanges.map(ex => `<span class="badge-exchange">${ex}</span>`).join(' ');
+      const exchangeBadges = stock.exchanges.map(ex => `
+        <a href="${ex.url}" target="_blank" rel="noopener noreferrer" class="badge-exchange-link" title="點擊前往報價行情">
+          ${ex.name} ↗
+        </a>
+      `).join(' ');
 
       html += `
         <div class="stock-card">
           <div class="stock-header">
             <div>
-              <span class="stock-symbol">${stock.symbol}</span>
-              <span class="stock-name">${stock.name}</span>
+              <a href="${stock.website}" target="_blank" rel="noopener noreferrer" class="stock-title-link" title="點擊造訪公司官網">
+                <span class="stock-symbol">${stock.symbol}</span>
+                <span class="stock-name">${stock.name}</span>
+                <span style="font-size: 11px; color: var(--accent);">🔗</span>
+              </a>
               <span class="badge-market">${stock.country}</span>
             </div>
             <div class="stock-score-badge" style="background: rgba(255,255,255,0.05); color: ${scoreColor}; border: 1px solid ${scoreColor};">
@@ -1619,14 +1664,14 @@
 
           <div class="stock-footer">
             <div><strong>${t.exchangeLabel}：</strong>${exchangeBadges}</div>
-            <a href="${stock.website}" target="_blank" rel="noopener noreferrer" class="official-link">${t.websiteBtn}</a>
+            <div style="color: var(--text-sub);">點擊代碼或名稱可直達公司官網</div>
           </div>
         </div>
       `;
     });
     listContainer.innerHTML = html || `<div style='color: var(--text-sub); text-align:center; padding: 24px;'>無符合條件或搜尋結果的標的</div>`;
 
-    // 2. 渲染我的自定義會計篩選
+    // 2. 我的自定義會計篩選渲染
     const exp_gpm = parseFloat(document.getElementById('exp_gpm').value);
     const exp_opm = parseFloat(document.getElementById('exp_opm').value);
     const exp_debt = parseFloat(document.getElementById('exp_debt').value);
@@ -1656,14 +1701,21 @@
 
     let expHtml = "";
     customFiltered.forEach(stock => {
-      const exchangeBadges = stock.exchanges.map(ex => `<span class="badge-exchange">${ex}</span>`).join(' ');
+      const exchangeBadges = stock.exchanges.map(ex => `
+        <a href="${ex.url}" target="_blank" rel="noopener noreferrer" class="badge-exchange-link" title="點擊前往報價行情">
+          ${ex.name} ↗
+        </a>
+      `).join(' ');
 
       expHtml += `
         <div class="stock-card">
           <div class="stock-header">
             <div>
-              <span class="stock-symbol">${stock.symbol}</span>
-              <span class="stock-name">${stock.name}</span>
+              <a href="${stock.website}" target="_blank" rel="noopener noreferrer" class="stock-title-link" title="點擊造訪公司官網">
+                <span class="stock-symbol">${stock.symbol}</span>
+                <span class="stock-name">${stock.name}</span>
+                <span style="font-size: 11px; color: var(--accent);">🔗</span>
+              </a>
               <span class="badge-market">${stock.country}</span>
             </div>
             <div style="font-size: 13px; color: var(--accent);">通過自訂指標篩選</div>
@@ -1683,7 +1735,7 @@
           </div>
           <div class="stock-footer">
             <div><strong>${t.exchangeLabel}：</strong>${exchangeBadges}</div>
-            <a href="${stock.website}" target="_blank" rel="noopener noreferrer" class="official-link">${t.websiteBtn}</a>
+            <div style="color: var(--text-sub);">點擊代碼或名稱可直達公司官網</div>
           </div>
         </div>
       `;
@@ -1691,7 +1743,7 @@
     expertContainer.innerHTML = expHtml || `<div style='color: var(--text-sub); text-align:center; padding: 24px;'>無符合自定義條件的標的，請嘗試放寬數值門檻。</div>`;
   }
 
-  // 初始載入各功能
+  // 初始計算與渲染
   calculateTrajectory();
   calculateGoal();
   renderStocks();
