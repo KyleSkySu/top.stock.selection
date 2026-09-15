@@ -230,8 +230,41 @@
       color: #f0fdfa;
       margin-top: 6px;
     }
+    .goal-cta-btn {
+      margin-top: 14px;
+      background: #38bdf8;
+      color: #0f172a;
+      border: none;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .goal-cta-btn:hover {
+      background: #7dd3fc;
+      transform: translateY(-1px);
+    }
 
     /* ===== 分頁三樣式：價值選股系統 ===== */
+    .goal-sync-banner {
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: #e0f2fe;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
     .filter-dashboard {
       background: #0b1120;
       padding: 14px 16px;
@@ -256,6 +289,16 @@
     }
     .search-input {
       min-width: 260px;
+    }
+    .limit-control-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .limit-num-input {
+      width: 60px !important;
+      text-align: center;
+      padding: 10px 4px !important;
     }
     .submode-bar {
       display: flex;
@@ -362,29 +405,31 @@
       background: #047857;
       color: #ffffff;
     }
-    .tags-container {
+    .alert-no-data-box {
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px dashed rgba(248, 113, 113, 0.4);
+      padding: 12px;
+      border-radius: 8px;
       display: flex;
+      justify-content: space-between;
+      align-items: center;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 8px;
+      font-size: 13px;
+      color: #fca5a5;
     }
-    .metric-tag {
-      font-size: 12px;
-      padding: 3px 8px;
-      border-radius: 6px;
+    .external-btn {
+      color: #38bdf8;
+      text-decoration: none;
+      font-weight: 600;
+      padding: 4px 10px;
       background: #0f172a;
       border: 1px solid #475569;
+      border-radius: 6px;
+      font-size: 12px;
     }
-    .metric-tag.pass {
-      border-color: rgba(52, 211, 153, 0.4);
-      color: #34d399;
-    }
-    .metric-tag.bonus {
-      border-color: rgba(56, 189, 248, 0.4);
-      color: #38bdf8;
-    }
-    .metric-tag.fail {
-      border-color: rgba(248, 113, 113, 0.4);
-      color: #f87171;
+    .external-btn:hover {
+      border-color: #38bdf8;
     }
     .reason-box {
       background: #0f172a;
@@ -393,6 +438,52 @@
       font-size: 13px;
       color: #cbd5e1;
       line-height: 1.5;
+    }
+    .details-toggle-btn {
+      background: transparent;
+      border: 1px solid #475569;
+      color: #94a3b8;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      align-self: flex-start;
+      transition: all 0.15s ease;
+    }
+    .details-toggle-btn:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    .checklist-drawer {
+      display: none;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 8px;
+      background: #182234;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+    }
+    .check-item {
+      font-size: 12px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .check-item.pass {
+      border-left: 3px solid #34d399;
+    }
+    .check-item.fail {
+      border-left: 3px solid #f87171;
+    }
+    .check-item.bonus {
+      border-left: 3px solid #38bdf8;
     }
     .stock-footer {
       display: flex;
@@ -552,6 +643,7 @@
       <div class="goal-result-title" id="goalResultTitle">達成目標所需要的條件</div>
       <div class="goal-result-highlight" id="goalResultPrimary">--</div>
       <div class="goal-desc" id="goalResultSub">請確認下方參數</div>
+      <button class="goal-cta-btn" onclick="transferGoalToStocks()">🚀 帶入此目標，前往價值選股</button>
     </div>
 
     <div class="grid">
@@ -611,12 +703,17 @@
 
   <!-- 分頁三：價值選股與標的評估 -->
   <div id="stockTab" class="tab-content">
+    <div id="goalSyncBanner" class="goal-sync-banner" style="display: none;">
+      <div>🎯 <strong>目標報酬率連動：</strong>您在目標計算中推導的年化報酬率為 <span id="syncedGoalRate" style="color: #38bdf8; font-weight: 800;">--%</span>，已優先匹配符合該成長階梯的配置組合。</div>
+      <button onclick="document.getElementById('goalSyncBanner').style.display='none'" style="background:none; border:none; color:#94a3b8; cursor:pointer;">✕</button>
+    </div>
+
     <div class="filter-dashboard">
       <div class="filter-row">
         <!-- 搜尋輸入框 -->
         <div class="filter-item" style="flex: 1;">
           <span id="ui_search_label">🔍 個股即時搜尋：</span>
-          <input type="text" id="stockSearchInput" class="search-input" placeholder="代碼或名稱 (如 2330, 6285, 2059, NVDA...)" oninput="renderStocks()">
+          <input type="text" id="stockSearchInput" class="search-input" placeholder="代碼、名稱或縮寫 (如 2330, 6285, NVDA, Google...)" oninput="handleSearchDebounce()">
         </div>
 
         <!-- 區域/國家選擇 -->
@@ -665,16 +762,15 @@
           </select>
         </div>
 
-        <!-- 排名家數上限 -->
+        <!-- 排名家數輸入與下拉複合控制項 (1~50步進) -->
         <div class="filter-item">
           <span id="ui_limit_label">📊 顯示排行家數：</span>
-          <select id="limitSelect" onchange="renderStocks()">
-            <option value="10">前 10 名</option>
-            <option value="20" selected>前 20 名</option>
-            <option value="30">前 30 名</option>
-            <option value="40">前 40 名</option>
-            <option value="50">前 50 名</option>
-          </select>
+          <div class="limit-control-wrap">
+            <input type="number" id="limitInput" class="limit-num-input" min="1" max="50" step="1" value="20" oninput="syncLimitFromInput(this.value)">
+            <select id="limitSelect" onchange="syncLimitFromSelect(this.value)" style="min-width: 80px;">
+              <!-- 動態生成 1 到 50 家 -->
+            </select>
+          </div>
         </div>
       </div>
     </div>
@@ -769,7 +865,7 @@
       tab2: "財務目標逆推計算",
       tab3: "價值選股與標的評估",
       searchLabel: "🔍 個股即時搜尋：",
-      searchPlaceholder: "代碼或名稱 (如 2330, 6285, 2059, NVDA...)",
+      searchPlaceholder: "代碼、名稱或縮寫 (如 2330, 6285, NVDA, Google...)",
       regionLabel: "🌍 區域/國家：",
       limitLabel: "📊 顯示排行家數：",
       subBtnExpert: "🎯 專家核心選股原則 (閉鎖評分體系)",
@@ -781,8 +877,12 @@
       customRuleTitle: "⚙️ 我的自定義會計篩選條件（數值空白代表不限制）：",
       customRuleDesc: "使用者可在此自行輸入專屬會計標準與門檻，即時過濾全球標的。",
       scoreText: "評分",
-      exchangeLabel: "掛牌交易所 (點擊查看報價)",
-      thesisLabel: "專家選股理由與護城河解構："
+      exchangeLabel: "掛牌交易所 (點擊查看行情)",
+      thesisLabel: "專家選股理由與護城河解構：",
+      noDataAlert: "很抱歉，查無此公司財務資料",
+      externalReportBtn: "前往外部查看最新財報 ↗",
+      viewDetailsBtn: "展開完整會計指標確切數據 ▼",
+      hideDetailsBtn: "收合會計指標細項 ▲"
     },
     "en": {
       title: "Global Investment Simulation & Value Stock Screener",
@@ -790,7 +890,7 @@
       tab2: "Goal-Seeking Solver",
       tab3: "Value Stock Evaluator",
       searchLabel: "🔍 Real-time Search:",
-      searchPlaceholder: "Ticker or Name (e.g. 2330, 6285, NVDA...)",
+      searchPlaceholder: "Ticker, Name or Abbr (e.g. 2330, 6285, NVDA, Google...)",
       regionLabel: "🌍 Region/Country:",
       limitLabel: "📊 Top Results Limit:",
       subBtnExpert: "🎯 Expert Fundamental Rules (Scoring Model)",
@@ -803,7 +903,11 @@
       customRuleDesc: "Enter your own fundamental filters to screen global assets in real time.",
       scoreText: "Score",
       exchangeLabel: "Listed Exchanges (Click for Quotes)",
-      thesisLabel: "Investment Thesis & Moat Analysis:"
+      thesisLabel: "Investment Thesis & Moat Analysis:",
+      noDataAlert: "Sorry, financial statements are not available for this company.",
+      externalReportBtn: "View Financials on External Portal ↗",
+      viewDetailsBtn: "Expand Full Accounting Checklist & Metrics ▼",
+      hideDetailsBtn: "Collapse Accounting Checklist ▲"
     },
     "zh-CN": {
       title: "投资动态模拟、目标倒推与价值选股系统",
@@ -811,20 +915,24 @@
       tab2: "财务目标逆推计算",
       tab3: "价值选股与标的评估",
       searchLabel: "🔍 个股即时搜索：",
-      searchPlaceholder: "代码或名称 (如 2330, 6285, NVDA...)",
+      searchPlaceholder: "代码、名称或缩写 (如 2330, 6285, NVDA, Google...)",
       regionLabel: "🌍 区域/国家：",
       limitLabel: "📊 显示排行家数：",
       subBtnExpert: "🎯 专家核心选股原则 (闭锁评分体系)",
       subBtnCustom: "⚙️ 我的自定义筛选器 (自订会计门槛)",
       ruleTitle: "📌 专家核心选股体系逻辑与权重计分说明：",
       rule1: "<strong>基准分 90 分</strong>。必要条件全部通过即达 90 分，<strong>每有一项不符扣 10 分</strong>（不限分数高低排满名额）。",
-      rule2: "<strong>必要条件：</strong>毛利率 > 15%、营业利润率 > 6%、负债率 < 40%、市净率(PB) < 3、流动比率 > 150%、速动比率 > 100%、高管持股 > 20%、未分配利润增长、月营收达标、无异常一次性收益。美股专属：ROA > 15%、ROE > 10%。",
+      rule2: "<strong>必要条件：</strong>毛利率 > 15%、营业利润率 > 6%、负债率 < 40%、市净率(PB) < 3、流动比率 > 150%、速动比率 > 100%、高管持股 > 20%、未分配利润稳健增长、月营收达标、无异常一次性收益。美股专属：ROA > 15%、ROE > 10%。",
       rule3: "<strong>加分项：</strong>市盈率(PE) < 10 (+10分)；其余非必要条件每符合一项 <strong>+5分</strong>。",
       customRuleTitle: "⚙️ 我的自定义会计筛选条件（空白代表不限制）：",
       customRuleDesc: "使用者可在此自行输入专属会计标准，即时过滤全球标的。",
       scoreText: "评分",
       exchangeLabel: "挂牌交易所 (点击查看行情)",
-      thesisLabel: "专家选股逻辑与护城河解构："
+      thesisLabel: "专家选股逻辑与护城河解构：",
+      noDataAlert: "很抱歉，查无此公司财务数据",
+      externalReportBtn: "前往外部查看最新财报 ↗",
+      viewDetailsBtn: "展开完整会计指标确切数据 ▼",
+      hideDetailsBtn: "收起会计指标细项 ▲"
     },
     "ja": {
       title: "複利シミュレーション＆バリュー株スクリーニング",
@@ -832,7 +940,7 @@
       tab2: "目標逆算ソルバー",
       tab3: "バリュー株スクリーナー",
       searchLabel: "🔍 銘柄リアルタイム検索：",
-      searchPlaceholder: "ティッカーまたは企業名...",
+      searchPlaceholder: "ティッカー、企業名または略称...",
       regionLabel: "🌍 地域・国：",
       limitLabel: "📊 表示件数上限：",
       subBtnExpert: "🎯 専門家コア選定基準（スコアリング）",
@@ -845,7 +953,11 @@
       customRuleDesc: "独自の会計基準を設定し、世界中の銘柄を抽出します。",
       scoreText: "スコア",
       exchangeLabel: "上場証券取引所 (クリックで相場へ)",
-      thesisLabel: "投資テーゼと競争優位性の分析："
+      thesisLabel: "投資テーゼと競争優位性の分析：",
+      noDataAlert: "申し訳ありません。この企業の財務データはありません。",
+      externalReportBtn: "外部サイトで財務諸表を確認 ↗",
+      viewDetailsBtn: "全会計指標の詳細データを展開 ▼",
+      hideDetailsBtn: "詳細データを折りたたむ ▲"
     },
     "ko": {
       title: "복리 시뮬레이션 및 가치투자 종목 발굴기",
@@ -853,20 +965,24 @@
       tab2: "재무 목표 역산 계산기",
       tab3: "가치주 선별 및 평가",
       searchLabel: "🔍 실시간 종목 검색:",
-      searchPlaceholder: "종목 코드 또는 회사명...",
+      searchPlaceholder: "종목 코드, 회사명 또는 약칭...",
       regionLabel: "🌍 지역/국가:",
       limitLabel: "📊 표시 개수:",
       subBtnExpert: "🎯 전문가 핵심 선정 원칙 (평가 모델)",
       subBtnCustom: "⚙️ 사용자 정의 필터 (맞춤형 기준)",
       ruleTitle: "📌 전문가 가치투자 스코어링 모델 설명:",
       rule1: "<strong>기본 점수 90점</strong>。필수 조건 통과 시 90점, <strong>미달 항목당 -10점</strong>(점수와 무관하게 순위를 채웁니다).",
-      rule2: "<strong>필수 조건:</strong> 매출총이익률 > 15%, 영업이익률 > 6%, 부채비율 < 40%, PBR < 3, 유동비율 > 150%, 당좌비율 > 100% 등.",
-      rule3: "<strong>가산점:</strong> PER < 10 (+10점), 기타 조건당 <strong>+5점</strong>.",
+      rule2: "<strong>필수 조건：</strong>매출총이익률 > 15%, 영업이익률 > 6%, 부채비율 < 40%, PBR < 3, 유동비율 > 150%, 당좌비율 > 100% 등.",
+      rule3: "<strong>가산점：</strong>PER < 10 (+10점), 기타 조건당 <strong>+5점</strong>.",
       customRuleTitle: "⚙️ 사용자 정의 회계 조건 (빈칸은 제한 없음):",
       customRuleDesc: "원하는 지표를 직접 입력하여 종목을 선별합니다.",
       scoreText: "점수",
       exchangeLabel: "상장 거래소 (시세 바로가기)",
-      thesisLabel: "투자 논리 및 경제적 해자 분석:"
+      thesisLabel: "투자 논리 및 경제적 해자 분석:",
+      noDataAlert: "죄송합니다. 해당 기업의 재무 데이터를 찾을 수 없습니다.",
+      externalReportBtn: "외부 사이트에서 최신 재무제표 보기 ↗",
+      viewDetailsBtn: "전체 회계 지표 상세 데이터 펼치기 ▼",
+      hideDetailsBtn: "상세 데이터 접기 ▲"
     },
     "ru": {
       title: "Симулятор сложных процентов и фундаментальный скринер",
@@ -874,20 +990,24 @@
       tab2: "Расчет финансовых целей",
       tab3: "Фундаментальный скринер акций",
       searchLabel: "🔍 Поиск акций:",
-      searchPlaceholder: "Тикер или название...",
+      searchPlaceholder: "Тикер, название или аббревиатура...",
       regionLabel: "🌍 Регион/Страна:",
       limitLabel: "📊 Показать топ:",
       subBtnExpert: "🎯 Экспертная модель оценки",
       subBtnCustom: "⚙️ Пользовательский фильтр",
       ruleTitle: "📌 Экспертная методология оценки:",
       rule1: "<strong>Базовый балл 90</strong>. Выполнение обязательных правил дает 90. <strong>-10 баллов за каждое нарушение</strong>.",
-      rule2: "<strong>Обязательно:</strong> Валовая маржа > 15%, Опер. маржа > 6%, Долг < 40%, P/B < 3, Ликвидность > 150% и др.",
-      rule3: "<strong>Бонус:</strong> P/E < 10 (+10 баллов), прочие бонусы дают <strong>+5 баллов</strong>.",
+      rule2: "<strong>Обязательно：</strong>Валовая маржа > 15%, Опер. маржа > 6%, Долг < 40%, P/B < 3, Ликвидность > 150% и др.",
+      rule3: "<strong>Бонус：</strong>P/E < 10 (+10 баллов), прочие бонусы дают <strong>+5 баллов</strong>.",
       customRuleTitle: "⚙️ Пользовательские финансовые критерии:",
       customRuleDesc: "Задайте свои параметры для отбора мировых акций.",
       scoreText: "Баллы",
       exchangeLabel: "Биржи (нажмите для котировок)",
-      thesisLabel: "Инвестиционный тезис и экономический ров:"
+      thesisLabel: "Инвестиционный тезис и экономический ров:",
+      noDataAlert: "К сожалению, финансовые данные по этой компании отсутствуют.",
+      externalReportBtn: "Смотреть отчетность на внешнем ресурсе ↗",
+      viewDetailsBtn: "Развернуть точные данные показателей ▼",
+      hideDetailsBtn: "Свернуть показатели ▲"
     },
     "de": {
       title: "Globales Zinseszins- & Value-Aktien-Tool",
@@ -895,24 +1015,55 @@
       tab2: "Ziel-Rückrechner",
       tab3: "Value-Aktien-Screener",
       searchLabel: "🔍 Echtzeit-Aktiensuche:",
-      searchPlaceholder: "Ticker oder Name eingeben...",
+      searchPlaceholder: "Ticker, Firmenname oder Kürzel...",
       regionLabel: "🌍 Region/Land:",
       limitLabel: "📊 Top-Ergebnisse anzeigen:",
       subBtnExpert: "🎯 Experten-Kriterien (Scoring-System)",
       subBtnCustom: "⚙️ Eigener Screener (Benutzerdefiniert)",
       ruleTitle: "📌 Experten-Methodik und Scoring-Modell:",
       rule1: "<strong>Basis-Score: 90 Punkte</strong>. Pflichtkriterien bestanden = 90. <strong>-10 Pkt. für jedes verfehlte Kriterium</strong>.",
-      rule2: "<strong>Pflichtkriterien:</strong> Bruttomarge > 15%, EBIT-Marge > 6%, Verschuldung < 40%, KBV < 3, Liquidität > 150% usw.",
-      rule3: "<strong>Bonuspunkte:</strong> KGV < 10 (+10 Pkt.), weitere Bonuskriterien bringen <strong>+5 Pkt.</strong>.",
+      rule2: "<strong>Pflichtkriterien：</strong>Bruttomarge > 15%, EBIT-Marge > 6%, Verschuldung < 40%, KBV < 3, Liquidität > 150% usw.",
+      rule3: "<strong>Bonuspunkte：</strong>KGV < 10 (+10 Pkt.), weitere Bonuskriterien bringen <strong>+5 Pkt.</strong>.",
       customRuleTitle: "⚙️ Benutzerdefinierte Bilanz-Kriterien:",
       customRuleDesc: "Definieren Sie eigene Filter zur weltweiten Aktienauswahl.",
       scoreText: "Score",
       exchangeLabel: "Börsennotierung (Klicken für Kurs)",
-      thesisLabel: "Investitionsthese & Burggraben-Analyse:"
+      thesisLabel: "Investitionsthese & Burggraben-Analyse:",
+      noDataAlert: "Entschuldigung, für dieses Unternehmen liegen keine Finanzdaten vor.",
+      externalReportBtn: "Finanzbericht auf externem Portal öffnen ↗",
+      viewDetailsBtn: "Alle Bilanzdaten & Kennzahlen einblenden ▼",
+      hideDetailsBtn: "Kennzahlen ausblenden ▲"
     }
   };
 
   let currentLang = "zh-TW";
+
+  // 初始化 1 到 50 家下拉選項
+  function initLimitDropdown() {
+    const sel = document.getElementById('limitSelect');
+    sel.innerHTML = '';
+    for (let i = 1; i <= 50; i++) {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = `${i} 家`;
+      if (i === 20) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  }
+
+  function syncLimitFromInput(val) {
+    let num = parseInt(val, 10);
+    if (isNaN(num) || num < 1) num = 1;
+    if (num > 50) num = 50;
+    document.getElementById('limitInput').value = num;
+    document.getElementById('limitSelect').value = num;
+    renderStocks();
+  }
+
+  function syncLimitFromSelect(val) {
+    document.getElementById('limitInput').value = val;
+    renderStocks();
+  }
 
   function changeLanguage(lang) {
     currentLang = lang;
@@ -952,6 +1103,13 @@
     if (tabId === 'stockTab') {
       renderStocks();
     }
+  }
+
+  function transferGoalToStocks() {
+    const rateText = document.getElementById('goalResultPrimary').textContent;
+    document.getElementById('syncedGoalRate').textContent = rateText;
+    document.getElementById('goalSyncBanner').style.display = 'flex';
+    switchTab('stockTab', document.getElementById('tab_btn_3'));
   }
 
   // ===== 第一分頁：正向模擬 =====
@@ -1222,20 +1380,28 @@
 
   // ===== 第三分頁：價值選股與標的評估模組 =====
   let currentSubmode = 'defaultMode';
+  let searchDebounceTimer = null;
 
-  // 深度擴充之全球與台灣核心標的資料庫
+  function handleSearchDebounce() {
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+      renderStocks();
+    }, 300);
+  }
+
+  // 全球與台灣標的動態映射清冊（含完整會計指標與查無降級標的）
   const stockDatabase = [
-    // --- 台灣精選標的 (涵蓋半導體、AI、網通衛星、關鍵組件、綠能、傳產) ---
+    // --- 具備完整財報的精選台股 ---
     {
-      symbol: "2330",
-      name: "台積電 (TSMC)",
-      country: "Taiwan",
-      region: "Asia",
+      symbol: "2330", name: "台積電 (TSMC)", aliases: ["台積", "TSM", "Taiwan Semi"],
+      country: "Taiwan", region: "Asia",
       exchanges: [
         { name: "TWSE: 2330", url: "https://finance.yahoo.com/quote/2330.TW" },
         { name: "NYSE: TSM", url: "https://finance.yahoo.com/quote/TSM" }
       ],
       website: "https://www.tsmc.com",
+      externalReportUrl: "https://fubon-ebrokerdj.fbs.com.tw/z/zc/zcq/zcq_2330.djhtm",
+      hasFinancials: true,
       gpm: 53.5, opm: 42.5, debtRatio: 33.5, pb: 4.9, pe: 18.2,
       currentRatio: 225, quickRatio: 198, insiderHold: 32.5,
       retainedEarningsGrowth: true, monthlyRevenueNTD: 2150, noAnomalousIncome: true,
@@ -1245,14 +1411,14 @@
       thesis: "先進製程晶圓代工市佔逾 90%，具備強大定價權與龐大自由現金流，護城河極深。"
     },
     {
-      symbol: "2308",
-      name: "台達電 (Delta)",
-      country: "Taiwan",
-      region: "Asia",
+      symbol: "2308", name: "台達電 (Delta)", aliases: ["Delta", "台達"],
+      country: "Taiwan", region: "Asia",
       exchanges: [
         { name: "TWSE: 2308", url: "https://finance.yahoo.com/quote/2308.TW" }
       ],
       website: "https://www.deltaww.com",
+      externalReportUrl: "https://fubon-ebrokerdj.fbs.com.tw/z/zc/zcq/zcq_2308.djhtm",
+      hasFinancials: true,
       gpm: 30.2, opm: 10.8, debtRatio: 37.8, pb: 2.8, pe: 17.5,
       currentRatio: 188, quickRatio: 138, insiderHold: 24.1,
       retainedEarningsGrowth: true, monthlyRevenueNTD: 360, noAnomalousIncome: true,
@@ -1262,14 +1428,14 @@
       thesis: "全球電源供應器與散熱方案龍頭，在 AI 高壓電源、液冷與自動化設備掌握核心規格。"
     },
     {
-      symbol: "6285",
-      name: "啟碁 (WNC)",
-      country: "Taiwan",
-      region: "Asia",
+      symbol: "6285", name: "啟碁 (WNC)", aliases: ["啟基", "Wistron NeWeb"],
+      country: "Taiwan", region: "Asia",
       exchanges: [
         { name: "TWSE: 6285", url: "https://finance.yahoo.com/quote/6285.TW" }
       ],
       website: "https://www.wnc.com.tw",
+      externalReportUrl: "https://fubon-ebrokerdj.fbs.com.tw/z/zc/zcq/zcq_6285.djhtm",
+      hasFinancials: true,
       gpm: 12.8, opm: 4.2, debtRatio: 58.5, pb: 1.8, pe: 11.5,
       currentRatio: 142, quickRatio: 92, insiderHold: 25.8,
       retainedEarningsGrowth: true, monthlyRevenueNTD: 95, noAnomalousIncome: true,
@@ -1279,14 +1445,14 @@
       thesis: "低軌衛星地面接收站、Wi-Fi 7 與車用車載通訊主要系統供應商，營收規模擴展迅速。"
     },
     {
-      symbol: "2059",
-      name: "川湖 (King Slide)",
-      country: "Taiwan",
-      region: "Asia",
+      symbol: "2059", name: "川湖 (King Slide)", aliases: ["KingSlide", "滑軌"],
+      country: "Taiwan", region: "Asia",
       exchanges: [
         { name: "TWSE: 2059", url: "https://finance.yahoo.com/quote/2059.TW" }
       ],
       website: "https://www.kingslide.com",
+      externalReportUrl: "https://fubon-ebrokerdj.fbs.com.tw/z/zc/zcq/zcq_2059.djhtm",
+      hasFinancials: true,
       gpm: 65.4, opm: 54.2, debtRatio: 16.2, pb: 4.2, pe: 21.0,
       currentRatio: 450, quickRatio: 380, insiderHold: 38.5,
       retainedEarningsGrowth: true, monthlyRevenueNTD: 8.5, noAnomalousIncome: true,
@@ -1296,14 +1462,14 @@
       thesis: "全球 AI 伺服器滑軌專利霸主，毛利率突破 60%，幾乎無負債，資產負債表極度健全。"
     },
     {
-      symbol: "2454",
-      name: "聯發科 (MediaTek)",
-      country: "Taiwan",
-      region: "Asia",
+      symbol: "2454", name: "聯發科 (MediaTek)", aliases: ["MTK", "發哥"],
+      country: "Taiwan", region: "Asia",
       exchanges: [
         { name: "TWSE: 2454", url: "https://finance.yahoo.com/quote/2454.TW" }
       ],
       website: "https://www.mediatek.tw",
+      externalReportUrl: "https://fubon-ebrokerdj.fbs.com.tw/z/zc/zcq/zcq_2454.djhtm",
+      hasFinancials: true,
       gpm: 48.5, opm: 19.8, debtRatio: 31.2, pb: 3.6, pe: 16.8,
       currentRatio: 210, quickRatio: 175, insiderHold: 22.4,
       retainedEarningsGrowth: true, monthlyRevenueNTD: 420, noAnomalousIncome: true,
@@ -1313,14 +1479,14 @@
       thesis: "行動晶片與邊緣 AI 處理器龍頭，配息政策慷慨，5 年平均殖利率超過 6%。"
     },
     {
-      symbol: "1519",
-      name: "華城 (Fortune Electric)",
-      country: "Taiwan",
-      region: "Asia",
+      symbol: "1519", name: "華城 (Fortune Electric)", aliases: ["華城電機"],
+      country: "Taiwan", region: "Asia",
       exchanges: [
         { name: "TWSE: 1519", url: "https://finance.yahoo.com/quote/1519.TW" }
       ],
       website: "https://www.fortune.com.tw",
+      externalReportUrl: "https://fubon-ebrokerdj.fbs.com.tw/z/zc/zcq/zcq_1519.djhtm",
+      hasFinancials: true,
       gpm: 34.8, opm: 21.5, debtRatio: 52.0, pb: 12.5, pe: 28.5,
       currentRatio: 162, quickRatio: 105, insiderHold: 36.2,
       retainedEarningsGrowth: true, monthlyRevenueNTD: 18.5, noAnomalousIncome: true,
@@ -1329,52 +1495,31 @@
       tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: false, roa: 15.2, roe: 36.0,
       thesis: "外銷美國變壓器與電網升級主力，在手訂單能見度高，受惠全球電網汰換大週期。"
     },
+
+    // --- 示範：新掛牌或待補資料標的（查無財報降級測試） ---
     {
-      symbol: "2317",
-      name: "鴻海 (Foxconn)",
-      country: "Taiwan",
-      region: "Asia",
+      symbol: "7777", name: "星展綠能新創 (Demo ESG)", aliases: ["星展綠能", "DemoESG"],
+      country: "Taiwan", region: "Asia",
       exchanges: [
-        { name: "TWSE: 2317", url: "https://finance.yahoo.com/quote/2317.TW" }
+        { name: "TPEx: 7777", url: "https://www.tpex.org.tw" }
       ],
-      website: "https://www.honhai.com",
-      gpm: 6.4, opm: 2.9, debtRatio: 56.2, pb: 1.4, pe: 11.2,
-      currentRatio: 155, quickRatio: 112, insiderHold: 20.5,
-      retainedEarningsGrowth: true, monthlyRevenueNTD: 5500, noAnomalousIncome: true,
-      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
-      fiveYearAvgYield: 5.1, tenYearRevUpOneThird: true, priceBelow7yrMultiple: true,
-      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: true, roa: 4.2, roe: 10.8,
-      thesis: "全球電子製造代工巨擘，垂直整合能力強，在 AI 伺服器機櫃組裝佔據龐大市佔份額。"
-    },
-    {
-      symbol: "2382",
-      name: "廣達 (Quanta)",
-      country: "Taiwan",
-      region: "Asia",
-      exchanges: [
-        { name: "TWSE: 2382", url: "https://finance.yahoo.com/quote/2382.TW" }
-      ],
-      website: "https://www.quantatw.com",
-      gpm: 8.2, opm: 4.6, debtRatio: 64.0, pb: 3.8, pe: 15.2,
-      currentRatio: 148, quickRatio: 102, insiderHold: 28.5,
-      retainedEarningsGrowth: true, monthlyRevenueNTD: 1100, noAnomalousIncome: true,
-      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
-      fiveYearAvgYield: 4.5, tenYearRevUpOneThird: true, priceBelow7yrMultiple: false,
-      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: false, roa: 6.8, roe: 24.5,
-      thesis: "一線雲端 CSP 巨頭主要伺服器 ODM 夥伴，高階運算系統出貨量居全球領先地位。"
+      website: "https://www.tpex.org.tw",
+      externalReportUrl: "https://mops.twse.com.tw/mops/web/index",
+      hasFinancials: false,
+      thesis: "台灣新掛牌創新板儲能系統開發商，專注於智慧電網微型儲能設備。"
     },
 
-    // --- 美國及國際重要標的 ---
+    // --- 全球精選美股與國際標的 ---
     {
-      symbol: "GOOGL",
-      name: "Alphabet Inc. (Google)",
-      country: "US",
-      region: "Americas",
+      symbol: "GOOGL", name: "Alphabet Inc. (Google)", aliases: ["Google", "Alphabet", "GOOG"],
+      country: "US", region: "Americas",
       exchanges: [
         { name: "NASDAQ: GOOGL", url: "https://finance.yahoo.com/quote/GOOGL" },
         { name: "XETRA: ABEA", url: "https://finance.yahoo.com/quote/ABEA.DE" }
       ],
       website: "https://abc.xyz",
+      externalReportUrl: "https://finance.yahoo.com/quote/GOOGL/financials",
+      hasFinancials: true,
       gpm: 57.5, opm: 29.8, debtRatio: 28.1, pb: 6.2, pe: 22.0,
       currentRatio: 210, quickRatio: 205, insiderHold: 21.5,
       retainedEarningsGrowth: true, monthlyRevenueNTD: 2300, noAnomalousIncome: true,
@@ -1384,14 +1529,14 @@
       thesis: "搜尋引擎與雲端基礎設施霸主，負債比率極低，具備強大技術壁壘與充沛自由現金流。"
     },
     {
-      symbol: "BRK.B",
-      name: "Berkshire Hathaway",
-      country: "US",
-      region: "Americas",
+      symbol: "BRK.B", name: "Berkshire Hathaway", aliases: ["波克夏", "Buffett", "BRK"],
+      country: "US", region: "Americas",
       exchanges: [
         { name: "NYSE: BRK.B", url: "https://finance.yahoo.com/quote/BRK-B" }
       ],
       website: "https://www.berkshirehathaway.com",
+      externalReportUrl: "https://finance.yahoo.com/quote/BRK-B/financials",
+      hasFinancials: true,
       gpm: 38.0, opm: 18.5, debtRatio: 18.2, pb: 1.5, pe: 16.0,
       currentRatio: 175, quickRatio: 160, insiderHold: 31.0,
       retainedEarningsGrowth: true, monthlyRevenueNTD: 2800, noAnomalousIncome: true,
@@ -1401,14 +1546,14 @@
       thesis: "終極堡壘型多元投資控股集團，保留盈餘長年全數再投資，手握逾千億美金現金。"
     },
     {
-      symbol: "NVDA",
-      name: "NVIDIA Corporation",
-      country: "US",
-      region: "Americas",
+      symbol: "NVDA", name: "NVIDIA Corporation", aliases: ["輝達", "Nvidia"],
+      country: "US", region: "Americas",
       exchanges: [
         { name: "NASDAQ: NVDA", url: "https://finance.yahoo.com/quote/NVDA" }
       ],
       website: "https://www.nvidia.com",
+      externalReportUrl: "https://finance.yahoo.com/quote/NVDA/financials",
+      hasFinancials: true,
       gpm: 75.2, opm: 62.1, debtRatio: 22.4, pb: 26.5, pe: 38.2,
       currentRatio: 350, quickRatio: 310, insiderHold: 20.8,
       retainedEarningsGrowth: true, monthlyRevenueNTD: 2900, noAnomalousIncome: true,
@@ -1418,15 +1563,15 @@
       thesis: "加速運算與 GPU 領域絕對霸主，CUDA 軟硬體生態系統構成難以逾越的護城河。"
     },
     {
-      symbol: "CCJ",
-      name: "Cameco Corporation",
-      country: "Canada",
-      region: "Americas",
+      symbol: "CCJ", name: "Cameco Corporation", aliases: ["Cameco", "天然鈾", "Uranium"],
+      country: "Canada", region: "Americas",
       exchanges: [
         { name: "NYSE: CCJ", url: "https://finance.yahoo.com/quote/CCJ" },
         { name: "TSX: CCO", url: "https://finance.yahoo.com/quote/CCO.TO" }
       ],
       website: "https://www.cameco.com",
+      externalReportUrl: "https://finance.yahoo.com/quote/CCJ/financials",
+      hasFinancials: true,
       gpm: 28.5, opm: 16.2, debtRatio: 21.0, pb: 3.2, pe: 32.0,
       currentRatio: 260, quickRatio: 210, insiderHold: 22.0,
       retainedEarningsGrowth: true, monthlyRevenueNTD: 85, noAnomalousIncome: true,
@@ -1436,15 +1581,15 @@
       thesis: "全球第二大天然鈾礦生產商，在核能復興與低碳基載電力大趨勢下擁有關鍵資源寡占地位。"
     },
     {
-      symbol: "ASML",
-      name: "ASML Holding",
-      country: "Western_Europe",
-      region: "Europe",
+      symbol: "ASML", name: "ASML Holding", aliases: ["艾斯摩爾", "EUV"],
+      country: "Western_Europe", region: "Europe",
       exchanges: [
         { name: "AMS: ASML", url: "https://finance.yahoo.com/quote/ASML.AS" },
         { name: "NASDAQ: ASML", url: "https://finance.yahoo.com/quote/ASML" }
       ],
       website: "https://www.asml.com",
+      externalReportUrl: "https://finance.yahoo.com/quote/ASML/financials",
+      hasFinancials: true,
       gpm: 51.3, opm: 31.5, debtRatio: 36.4, pb: 18.2, pe: 34.0,
       currentRatio: 165, quickRatio: 110, insiderHold: 28.0,
       retainedEarningsGrowth: true, monthlyRevenueNTD: 850, noAnomalousIncome: true,
@@ -1454,15 +1599,15 @@
       thesis: "荷蘭極紫外光(EUV)光刻機全球獨佔製造商，半導體產業鏈無可替代的關鍵基石。"
     },
     {
-      symbol: "SAP",
-      name: "SAP SE",
-      country: "Germany",
-      region: "Europe",
+      symbol: "SAP", name: "SAP SE", aliases: ["思愛普", "ERP"],
+      country: "Germany", region: "Europe",
       exchanges: [
         { name: "XETRA: SAP", url: "https://finance.yahoo.com/quote/SAP.DE" },
         { name: "NYSE: SAP", url: "https://finance.yahoo.com/quote/SAP" }
       ],
       website: "https://www.sap.com",
+      externalReportUrl: "https://finance.yahoo.com/quote/SAP/financials",
+      hasFinancials: true,
       gpm: 72.5, opm: 23.4, debtRatio: 29.8, pb: 3.8, pe: 28.5,
       currentRatio: 155, quickRatio: 150, insiderHold: 22.0,
       retainedEarningsGrowth: true, monthlyRevenueNTD: 920, noAnomalousIncome: true,
@@ -1472,15 +1617,15 @@
       thesis: "歐洲最大企業級 ERP 軟體巨頭，客戶轉換成本極高，雲端經常性訂閱收入穩步攀升。"
     },
     {
-      symbol: "7203",
-      name: "Toyota Motor (豐田汽車)",
-      country: "Japan",
-      region: "Asia",
+      symbol: "7203", name: "Toyota Motor (豐田汽車)", aliases: ["Toyota", "豐田"],
+      country: "Japan", region: "Asia",
       exchanges: [
         { name: "TYO: 7203", url: "https://finance.yahoo.com/quote/7203.T" },
         { name: "NYSE: TM", url: "https://finance.yahoo.com/quote/TM" }
       ],
       website: "https://global.toyota",
+      externalReportUrl: "https://finance.yahoo.com/quote/7203.T/financials",
+      hasFinancials: true,
       gpm: 21.2, opm: 11.2, debtRatio: 38.8, pb: 1.1, pe: 9.2,
       currentRatio: 152, quickRatio: 118, insiderHold: 24.5,
       retainedEarningsGrowth: true, monthlyRevenueNTD: 3200, noAnomalousIncome: true,
@@ -1488,24 +1633,6 @@
       fiveYearAvgYield: 3.5, tenYearRevUpOneThird: true, priceBelow7yrMultiple: true,
       tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: true, roa: 6.8, roe: 14.5,
       thesis: "全球銷量第一大車廠，油電混合車市場壁壘深厚，PE低於10且PB接近1倍，估值安全。"
-    },
-    {
-      symbol: "005930",
-      name: "Samsung Electronics (三星電子)",
-      country: "Korea",
-      region: "Asia",
-      exchanges: [
-        { name: "KRX: 005930", url: "https://finance.yahoo.com/quote/005930.KS" },
-        { name: "LSE: SMSN", url: "https://finance.yahoo.com/quote/SMSN.L" }
-      ],
-      website: "https://www.samsung.com",
-      gpm: 37.8, opm: 14.2, debtRatio: 25.1, pb: 1.3, pe: 12.8,
-      currentRatio: 240, quickRatio: 195, insiderHold: 21.8,
-      retainedEarningsGrowth: true, monthlyRevenueNTD: 2400, noAnomalousIncome: true,
-      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
-      fiveYearAvgYield: 2.8, tenYearRevUpOneThird: true, priceBelow7yrMultiple: true,
-      tenYearProfitUpOneThird: true, priceBelow3yrAvg15x: false, roa: 8.5, roe: 12.1,
-      thesis: "記憶體 DRAM/NAND 市佔領先，現金流豐沛且資產負債表堅如磐石。"
     }
   ];
 
@@ -1525,71 +1652,98 @@
 
   // 專家核心評分體系（基準90分，每漏一項必要條件扣10分，非必要條件加分制）
   function evaluateStock(stock) {
-    let score = 90;
-    const necessaryLogs = [];
-    const bonusLogs = [];
-
-    // 1. 毛利率 > 15%
-    if (stock.gpm > 15) necessaryLogs.push({ text: `毛利率 ${stock.gpm}% (>15%)`, pass: true });
-    else { necessaryLogs.push({ text: `毛利率 ${stock.gpm}% (未達15%)`, pass: false }); score -= 10; }
-
-    // 2. 營益率 > 6%
-    if (stock.opm > 6) necessaryLogs.push({ text: `營益率 ${stock.opm}% (>6%)`, pass: true });
-    else { necessaryLogs.push({ text: `營益率 ${stock.opm}% (未達6%)`, pass: false }); score -= 10; }
-
-    // 3. 負債比 < 40%
-    if (stock.debtRatio < 40) necessaryLogs.push({ text: `負債比 ${stock.debtRatio}% (<40%)`, pass: true });
-    else { necessaryLogs.push({ text: `負債比 ${stock.debtRatio}% (超過40%)`, pass: false }); score -= 10; }
-
-    // 4. 股價淨值比 PB < 3
-    if (stock.pb < 3) necessaryLogs.push({ text: `PB ${stock.pb} (<3)`, pass: true });
-    else { necessaryLogs.push({ text: `PB ${stock.pb} (高於3)`, pass: false }); score -= 10; }
-
-    // 5. 流動比率 > 150%
-    if (stock.currentRatio > 150) necessaryLogs.push({ text: `流動比率 ${stock.currentRatio}% (>150%)`, pass: true });
-    else { necessaryLogs.push({ text: `流動比率 ${stock.currentRatio}% (未達150%)`, pass: false }); score -= 10; }
-
-    // 6. 速動比率 > 100%
-    if (stock.quickRatio > 100) necessaryLogs.push({ text: `速動比率 ${stock.quickRatio}% (>100%)`, pass: true });
-    else { necessaryLogs.push({ text: `速動比率 ${stock.quickRatio}% (未達100%)`, pass: false }); score -= 10; }
-
-    // 7. 董監持股 > 20%
-    if (stock.insiderHold > 20) necessaryLogs.push({ text: `董監持股 ${stock.insiderHold}% (>20%)`, pass: true });
-    else { necessaryLogs.push({ text: `董監持股 ${stock.insiderHold}% (未達20%)`, pass: false }); score -= 10; }
-
-    // 8. 保留盈餘逐年成長
-    if (stock.retainedEarningsGrowth) necessaryLogs.push({ text: `保留盈餘穩健擴增`, pass: true });
-    else { necessaryLogs.push({ text: `保留盈餘衰退`, pass: false }); score -= 10; }
-
-    // 9. 月營收 > 4億台幣 (約 1400 萬美元)
-    if (stock.monthlyRevenueNTD >= 4) necessaryLogs.push({ text: `月營收達標(規模充足)`, pass: true });
-    else { necessaryLogs.push({ text: `月營收規模不足`, pass: false }); score -= 10; }
-
-    // 10. 無異常收入
-    if (stock.noAnomalousIncome) necessaryLogs.push({ text: `無異常收入/本業純`, pass: true });
-    else { necessaryLogs.push({ text: `業外/處分/匯損干擾`, pass: false }); score -= 10; }
-
-    // 美股專屬必要條件
-    if (stock.country === 'US') {
-      if (stock.roa > 15) necessaryLogs.push({ text: `ROA ${stock.roa}% (>15%)`, pass: true });
-      else { necessaryLogs.push({ text: `ROA ${stock.roa}% (美股門檻未達15%)`, pass: false }); score -= 10; }
-
-      if (stock.roe > 10) necessaryLogs.push({ text: `ROE ${stock.roe}% (>10%)`, pass: true });
-      else { necessaryLogs.push({ text: `ROE ${stock.roe}% (美股門檻未達10%)`, pass: false }); score -= 10; }
+    if (!stock.hasFinancials) {
+      return { score: 0, items: [], hasFinancials: false };
     }
 
-    // 加分條件
-    if (stock.pe < 10) { score += 10; bonusLogs.push(`PE ${stock.pe} (<10) [+10]`); }
-    if (stock.revenueMoMGrowth) { score += 5; bonusLogs.push(`營收月增成長 [+5]`); }
-    if (stock.revenueYoYGrowth) { score += 5; bonusLogs.push(`營收年增成長 [+5]`); }
-    if (stock.accumulatedRevGrowth) { score += 5; bonusLogs.push(`累計營收遞增 [+5]`); }
-    if (stock.fiveYearAvgYield > 5) { score += 5; bonusLogs.push(`5年殖利率 ${stock.fiveYearAvgYield}% (>5%) [+5]`); }
-    if (stock.tenYearRevUpOneThird) { score += 5; bonusLogs.push(`近10年營收增長>1/3 [+5]`); }
-    if (stock.priceBelow7yrMultiple) { score += 5; bonusLogs.push(`股價低於7年均值倍數 [+5]`); }
-    if (stock.tenYearProfitUpOneThird) { score += 5; bonusLogs.push(`近10年盈利增長>1/3 [+5]`); }
-    if (stock.priceBelow3yrAvg15x) { score += 5; bonusLogs.push(`股價<近3年均利15倍 [+5]`); }
+    let score = 90;
+    const items = [];
 
-    return { score, necessaryLogs, bonusLogs };
+    // 1. 毛利率 > 15%
+    const p1 = stock.gpm > 15;
+    if (!p1) score -= 10;
+    items.push({ name: "毛利率 (GPM > 15%)", actual: `${stock.gpm}%`, req: "> 15%", pass: p1, impact: p1 ? "0" : "-10", type: "mandatory" });
+
+    // 2. 營益率 > 6%
+    const p2 = stock.opm > 6;
+    if (!p2) score -= 10;
+    items.push({ name: "營益率 (OPM > 6%)", actual: `${stock.opm}%`, req: "> 6%", pass: p2, impact: p2 ? "0" : "-10", type: "mandatory" });
+
+    // 3. 負債比 < 40%
+    const p3 = stock.debtRatio < 40;
+    if (!p3) score -= 10;
+    items.push({ name: "負債比率 (Debt < 40%)", actual: `${stock.debtRatio}%`, req: "< 40%", pass: p3, impact: p3 ? "0" : "-10", type: "mandatory" });
+
+    // 4. 股價淨值比 PB < 3
+    const p4 = stock.pb < 3;
+    if (!p4) score -= 10;
+    items.push({ name: "股價淨值比 (P/B < 3.0)", actual: `${stock.pb}`, req: "< 3.0", pass: p4, impact: p4 ? "0" : "-10", type: "mandatory" });
+
+    // 5. 流動比率 > 150%
+    const p5 = stock.currentRatio > 150;
+    if (!p5) score -= 10;
+    items.push({ name: "流動比率 (CR > 150%)", actual: `${stock.currentRatio}%`, req: "> 150%", pass: p5, impact: p5 ? "0" : "-10", type: "mandatory" });
+
+    // 6. 速動比率 > 100%
+    const p6 = stock.quickRatio > 100;
+    if (!p6) score -= 10;
+    items.push({ name: "速動比率 (QR > 100%)", actual: `${stock.quickRatio}%`, req: "> 100%", pass: p6, impact: p6 ? "0" : "-10", type: "mandatory" });
+
+    // 7. 董監持股 > 20%
+    const p7 = stock.insiderHold > 20;
+    if (!p7) score -= 10;
+    items.push({ name: "董監持股 (Insider > 20%)", actual: `${stock.insiderHold}%`, req: "> 20%", pass: p7, impact: p7 ? "0" : "-10", type: "mandatory" });
+
+    // 8. 保留盈餘逐年成長
+    const p8 = stock.retainedEarningsGrowth;
+    if (!p8) score -= 10;
+    items.push({ name: "保留盈餘逐年成長", actual: p8 ? "穩健擴增" : "未達成長", req: "逐年成長", pass: p8, impact: p8 ? "0" : "-10", type: "mandatory" });
+
+    // 9. 月營收規模達標
+    const p9 = stock.monthlyRevenueNTD >= 4;
+    if (!p9) score -= 10;
+    items.push({ name: "月營收規模 (>4億NTD/$14M)", actual: `${stock.monthlyRevenueNTD} 億 NTD`, req: "≥ 4 億 NTD", pass: p9, impact: p9 ? "0" : "-10", type: "mandatory" });
+
+    // 10. 無異常一次性收益
+    const p10 = stock.noAnomalousIncome;
+    if (!p10) score -= 10;
+    items.push({ name: "本業收入純度 (無異常收入)", actual: p10 ? "本業純" : "含異常收益", req: "排除匯損/處分", pass: p10, impact: p10 ? "0" : "-10", type: "mandatory" });
+
+    // 美股專屬門檻
+    if (stock.country === 'US') {
+      const pRoa = stock.roa > 15;
+      if (!pRoa) score -= 10;
+      items.push({ name: "美股專屬 ROA (> 15%)", actual: `${stock.roa}%`, req: "> 15%", pass: pRoa, impact: pRoa ? "0" : "-10", type: "mandatory" });
+
+      const pRoe = stock.roe > 10;
+      if (!pRoe) score -= 10;
+      items.push({ name: "美股專屬 ROE (> 10%)", actual: `${stock.roe}%`, req: "> 10%", pass: pRoe, impact: pRoe ? "0" : "-10", type: "mandatory" });
+    }
+
+    // 加分項目
+    if (stock.pe < 10) { score += 10; items.push({ name: "本益比低估 (P/E < 10)", actual: `${stock.pe}`, req: "< 10", pass: true, impact: "+10", type: "bonus" }); }
+    if (stock.revenueMoMGrowth) { score += 5; items.push({ name: "營收月增率 (MoM > 0%)", actual: "正成長", req: "> 0%", pass: true, impact: "+5", type: "bonus" }); }
+    if (stock.revenueYoYGrowth) { score += 5; items.push({ name: "營收年增率 (YoY > 0%)", actual: "正成長", req: "> 0%", pass: true, impact: "+5", type: "bonus" }); }
+    if (stock.accumulatedRevGrowth) { score += 5; items.push({ name: "累計營收遞增", actual: "穩步遞增", req: "遞增", pass: true, impact: "+5", type: "bonus" }); }
+    if (stock.fiveYearAvgYield > 5) { score += 5; items.push({ name: "5年平均殖利率 (> 5%)", actual: `${stock.fiveYearAvgYield}%`, req: "> 5%", pass: true, impact: "+5", type: "bonus" }); }
+    if (stock.tenYearRevUpOneThird) { score += 5; items.push({ name: "近10年營收增加 > 1/3", actual: "增逾 33%", req: "> 33%", pass: true, impact: "+5", type: "bonus" }); }
+    if (stock.priceBelow7yrMultiple) { score += 5; items.push({ name: "股價 < 7年平均營收/EPS倍數", actual: "具均值折價", req: "低於均倍", pass: true, impact: "+5", type: "bonus" }); }
+    if (stock.tenYearProfitUpOneThird) { score += 5; items.push({ name: "近10年盈利增加 > 1/3", actual: "增逾 33%", req: "> 33%", pass: true, impact: "+5", type: "bonus" }); }
+    if (stock.priceBelow3yrAvg15x) { score += 5; items.push({ name: "股價 < 近3年平均盈利15倍", actual: "低於15倍折價", req: "< 15倍", pass: true, impact: "+5", type: "bonus" }); }
+
+    return { score, items, hasFinancials: true };
+  }
+
+  function toggleDrawer(btn, drawerId) {
+    const drawer = document.getElementById(drawerId);
+    const t = i18n[currentLang] || i18n['zh-TW'];
+    if (drawer.style.display === 'grid') {
+      drawer.style.display = 'none';
+      btn.textContent = t.viewDetailsBtn;
+    } else {
+      drawer.style.display = 'grid';
+      btn.textContent = t.hideDetailsBtn;
+    }
   }
 
   function renderStocks() {
@@ -1597,77 +1751,136 @@
     const expertContainer = document.getElementById('expertStockListContainer');
     const searchTerm = (document.getElementById('stockSearchInput').value || '').trim().toLowerCase();
     const selectedCountry = document.getElementById('countrySelect').value;
-    const limit = parseInt(document.getElementById('limitSelect').value, 10) || 20;
+    const limit = parseInt(document.getElementById('limitInput').value, 10) || 20;
     const t = i18n[currentLang] || i18n['zh-TW'];
 
-    // 國家/區域與關鍵字即時過濾
+    // 國家/區域與關鍵字即時過濾（支援代碼、全名、縮寫 aliases）
     let filtered = stockDatabase.filter(stock => {
       if (selectedCountry !== 'ALL') {
         if (selectedCountry === 'Europe_All' && stock.region !== 'Europe') return false;
         else if (selectedCountry !== 'Europe_All' && stock.country !== selectedCountry) return false;
       }
       if (searchTerm) {
-        const matchesSymbol = stock.symbol.toLowerCase().includes(searchTerm);
-        const matchesName = stock.name.toLowerCase().includes(searchTerm);
-        if (!matchesSymbol && !matchesName) return false;
+        const matchSymbol = stock.symbol.toLowerCase().includes(searchTerm);
+        const matchName = stock.name.toLowerCase().includes(searchTerm);
+        const matchAlias = stock.aliases && stock.aliases.some(a => a.toLowerCase().includes(searchTerm));
+        if (!matchSymbol && !matchName && !matchAlias) return false;
       }
       return true;
     });
 
-    // 評分並一律填滿給定數量（即便低於 90 分也完整排入）
-    const scoredList = filtered.map(stock => {
+    // 評分並填滿排名（有財報依分數降冪，無財報降級保留並排於後方）
+    const evaluatedList = filtered.map(stock => {
       const evalRes = evaluateStock(stock);
       return { ...stock, ...evalRes };
-    }).sort((a, b) => b.score - a.score).slice(0, limit);
+    }).sort((a, b) => {
+      if (a.hasFinancials && !b.hasFinancials) return -1;
+      if (!a.hasFinancials && b.hasFinancials) return 1;
+      return b.score - a.score;
+    }).slice(0, limit);
 
     // 1. 專家核心原則清單渲染
     let html = "";
-    scoredList.forEach(stock => {
-      let scoreColor = "var(--accent-green)";
-      if (stock.score < 80) scoreColor = "var(--accent-yellow)";
-      if (stock.score < 60) scoreColor = "var(--accent-red)";
-
+    evaluatedList.forEach((stock, idx) => {
       const exchangeBadges = stock.exchanges.map(ex => `
-        <a href="${ex.url}" target="_blank" rel="noopener noreferrer" class="badge-exchange-link" title="點擊前往報價行情">
+        <a href="${ex.url}" target="_blank" rel="noopener noreferrer" class="badge-exchange-link" title="點擊前往行情報價">
           ${ex.name} ↗
         </a>
       `).join(' ');
 
-      html += `
-        <div class="stock-card">
-          <div class="stock-header">
-            <div>
-              <a href="${stock.website}" target="_blank" rel="noopener noreferrer" class="stock-title-link" title="點擊造訪公司官網">
-                <span class="stock-symbol">${stock.symbol}</span>
-                <span class="stock-name">${stock.name}</span>
-                <span style="font-size: 11px; color: var(--accent);">🔗</span>
-              </a>
-              <span class="badge-market">${stock.country}</span>
+      const drawerId = `drawer_${idx}`;
+
+      if (!stock.hasFinancials) {
+        // 降級呈現：查無財務資料
+        html += `
+          <div class="stock-card">
+            <div class="stock-header">
+              <div>
+                <a href="${stock.website}" target="_blank" rel="noopener noreferrer" class="stock-title-link" title="點擊造訪公司官網">
+                  <span class="stock-symbol">${stock.symbol}</span>
+                  <span class="stock-name">${stock.name}</span>
+                  <span style="font-size: 11px; color: var(--accent);">🔗</span>
+                </a>
+                <span class="badge-market">${stock.country}</span>
+              </div>
             </div>
-            <div class="stock-score-badge" style="background: rgba(255,255,255,0.05); color: ${scoreColor}; border: 1px solid ${scoreColor};">
-              ${t.scoreText}：${stock.score}
+
+            <div class="alert-no-data-box">
+              <div>⚠️ <strong>${t.noDataAlert}</strong></div>
+              <a href="${stock.externalReportUrl}" target="_blank" rel="noopener noreferrer" class="external-btn">${t.externalReportBtn}</a>
+            </div>
+
+            <div class="reason-box">
+              <strong>公司基本介紹：</strong>${stock.thesis}
+            </div>
+
+            <div class="stock-footer">
+              <div><strong>${t.exchangeLabel}：</strong>${exchangeBadges}</div>
+              <div style="color: var(--text-sub);">點擊代碼或名稱直達官方網站</div>
             </div>
           </div>
+        `;
+      } else {
+        // 正常呈現：完整會計指標與可收合抽屜
+        let scoreColor = "var(--accent-green)";
+        if (stock.score < 80) scoreColor = "var(--accent-yellow)";
+        if (stock.score < 60) scoreColor = "var(--accent-red)";
 
-          <div class="tags-container">
-            ${stock.necessaryLogs.map(item => `
-              <span class="metric-tag ${item.pass ? 'pass' : 'fail'}">${item.text}</span>
-            `).join('')}
-            ${stock.bonusLogs.map(text => `
-              <span class="metric-tag bonus">${text}</span>
-            `).join('')}
-          </div>
+        const failedItems = stock.items.filter(it => it.type === 'mandatory' && !it.pass);
 
-          <div class="reason-box">
-            <strong>${t.thesisLabel}</strong>${stock.thesis}
-          </div>
+        html += `
+          <div class="stock-card">
+            <div class="stock-header">
+              <div>
+                <a href="${stock.website}" target="_blank" rel="noopener noreferrer" class="stock-title-link" title="點擊造訪公司官網">
+                  <span class="stock-symbol">${stock.symbol}</span>
+                  <span class="stock-name">${stock.name}</span>
+                  <span style="font-size: 11px; color: var(--accent);">🔗</span>
+                </a>
+                <span class="badge-market">${stock.country}</span>
+              </div>
+              <div class="stock-score-badge" style="background: rgba(255,255,255,0.05); color: ${scoreColor}; border: 1px solid ${scoreColor};">
+                ${t.scoreText}：${stock.score}
+              </div>
+            </div>
 
-          <div class="stock-footer">
-            <div><strong>${t.exchangeLabel}：</strong>${exchangeBadges}</div>
-            <div style="color: var(--text-sub);">點擊代碼或名稱可直達公司官網</div>
+            ${failedItems.length > 0 ? `
+              <div style="font-size: 12px; color: var(--accent-red); display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+                <span>⚠️ 未達標警示：</span>
+                ${failedItems.map(f => `<span style="background: rgba(248,113,113,0.1); padding: 2px 6px; border-radius: 4px;">${f.name} [現值: ${f.actual}]</span>`).join('')}
+              </div>
+            ` : `<div style="font-size: 12px; color: var(--accent-green);">✓ 10 項會計核心必要門檻全數通過 (基準 90 分)</div>`}
+
+            <div class="reason-box">
+              <strong>${t.thesisLabel}</strong>${stock.thesis}
+            </div>
+
+            <button class="details-toggle-btn" onclick="toggleDrawer(this, '${drawerId}')">
+              ${t.viewDetailsBtn}
+            </button>
+
+            <!-- 可收合抽屜：列出確切數據與門檻 -->
+            <div id="${drawerId}" class="checklist-drawer">
+              ${stock.items.map(it => `
+                <div class="check-item ${it.type === 'bonus' ? 'bonus' : (it.pass ? 'pass' : 'fail')}">
+                  <div>
+                    <div style="font-weight: 600; color: #f8fafc;">${it.name}</div>
+                    <div style="font-size: 11px; color: var(--text-sub);">門檻: ${it.req} | 實測: <span style="color: ${it.pass ? '#34d399' : '#f87171'}; font-weight: bold;">${it.actual}</span></div>
+                  </div>
+                  <div style="font-weight: 800; font-size: 13px; color: ${it.impact.includes('+') ? '#38bdf8' : (it.impact === '0' ? '#94a3b8' : '#f87171')};">
+                    ${it.impact}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+
+            <div class="stock-footer">
+              <div><strong>${t.exchangeLabel}：</strong>${exchangeBadges}</div>
+              <a href="${stock.externalReportUrl}" target="_blank" rel="noopener noreferrer" class="external-btn">${t.externalReportBtn}</a>
+            </div>
           </div>
-        </div>
-      `;
+        `;
+      }
     });
     listContainer.innerHTML = html || `<div style='color: var(--text-sub); text-align:center; padding: 24px;'>無符合條件或搜尋結果的標的</div>`;
 
@@ -1685,6 +1898,7 @@
     const exp_roe = parseFloat(document.getElementById('exp_roe').value);
 
     const customFiltered = filtered.filter(stock => {
+      if (!stock.hasFinancials) return false;
       if (!isNaN(exp_gpm) && stock.gpm < exp_gpm) return false;
       if (!isNaN(exp_opm) && stock.opm < exp_opm) return false;
       if (!isNaN(exp_debt) && stock.debtRatio > exp_debt) return false;
@@ -1702,7 +1916,7 @@
     let expHtml = "";
     customFiltered.forEach(stock => {
       const exchangeBadges = stock.exchanges.map(ex => `
-        <a href="${ex.url}" target="_blank" rel="noopener noreferrer" class="badge-exchange-link" title="點擊前往報價行情">
+        <a href="${ex.url}" target="_blank" rel="noopener noreferrer" class="badge-exchange-link" title="點擊前往行情報價">
           ${ex.name} ↗
         </a>
       `).join(' ');
@@ -1720,7 +1934,7 @@
             </div>
             <div style="font-size: 13px; color: var(--accent);">通過自訂指標篩選</div>
           </div>
-          <div class="tags-container">
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
             <span class="metric-tag pass">毛利率: ${stock.gpm}%</span>
             <span class="metric-tag pass">營益率: ${stock.opm}%</span>
             <span class="metric-tag pass">負債比: ${stock.debtRatio}%</span>
@@ -1735,7 +1949,7 @@
           </div>
           <div class="stock-footer">
             <div><strong>${t.exchangeLabel}：</strong>${exchangeBadges}</div>
-            <div style="color: var(--text-sub);">點擊代碼或名稱可直達公司官網</div>
+            <a href="${stock.externalReportUrl}" target="_blank" rel="noopener noreferrer" class="external-btn">${t.externalReportBtn}</a>
           </div>
         </div>
       `;
@@ -1743,7 +1957,8 @@
     expertContainer.innerHTML = expHtml || `<div style='color: var(--text-sub); text-align:center; padding: 24px;'>無符合自定義條件的標的，請嘗試放寬數值門檻。</div>`;
   }
 
-  // 初始計算與渲染
+  // 初始計算與綁定
+  initLimitDropdown();
   calculateTrajectory();
   calculateGoal();
   renderStocks();
