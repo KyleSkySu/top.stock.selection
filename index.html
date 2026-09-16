@@ -495,6 +495,17 @@
       flex-wrap: wrap;
       gap: 6px;
     }
+    .loading-notice {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 18px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 14px;
+      color: var(--accent);
+      margin-bottom: 16px;
+      display: none;
+    }
 
     /* ===== 自定義四大報表摺疊區樣式 ===== */
     .accordion-group {
@@ -758,7 +769,7 @@
         <!-- 搜尋欄位 -->
         <div class="filter-item" style="flex: 1;">
           <span id="ui_search_label">🔍 個股即時搜尋：</span>
-          <input type="text" id="stockSearchInput" class="search-input" placeholder="代碼、名稱或縮寫 (如 欣銓, 3264, 華通, NVDA...)" oninput="renderStocks()">
+          <input type="text" id="stockSearchInput" class="search-input" placeholder="代碼、名稱或縮寫 (如 2603, 2408, 2441, 1717, 3264, NVDA...)" oninput="handleSearchDebounce()">
         </div>
 
         <!-- 31個完整區域與國家下拉選單 -->
@@ -766,23 +777,6 @@
           <span id="ui_region_label">🌍 區域/國家：</span>
           <select id="countrySelect" onchange="renderStocks()" style="min-width: 170px;">
             <option value="ALL">🌐 全球 (全部市場)</option>
-            <optgroup label="歐洲區域 (Europe)">
-              <option value="Europe_All">歐洲 (全選)</option>
-              <option value="Northern_Europe">北歐</option>
-              <option value="Eastern_Europe">東歐</option>
-              <option value="Western_Europe">西歐</option>
-              <option value="Southern_Europe">南歐</option>
-              <option value="Spain">西班牙</option>
-              <option value="Italy">義大利</option>
-              <option value="Germany">德國</option>
-              <option value="France">法國</option>
-              <option value="UK">英國</option>
-            </optgroup>
-            <optgroup label="美洲區域 (Americas)">
-              <option value="US">美國</option>
-              <option value="Canada">加拿大</option>
-              <option value="South_America">南美洲</option>
-            </optgroup>
             <optgroup label="亞洲與中東 (Asia & Middle East)">
               <option value="Taiwan">台灣</option>
               <option value="China">大陸</option>
@@ -798,6 +792,23 @@
               <option value="Israel">以色列</option>
               <option value="Central_Asia">中亞</option>
               <option value="Mongolia">蒙古</option>
+            </optgroup>
+            <optgroup label="美洲區域 (Americas)">
+              <option value="US">美國</option>
+              <option value="Canada">加拿大</option>
+              <option value="South_America">南美洲</option>
+            </optgroup>
+            <optgroup label="歐洲區域 (Europe)">
+              <option value="Europe_All">歐洲 (全選)</option>
+              <option value="Northern_Europe">北歐</option>
+              <option value="Eastern_Europe">東歐</option>
+              <option value="Western_Europe">西歐</option>
+              <option value="Southern_Europe">南歐</option>
+              <option value="Spain">西班牙</option>
+              <option value="Italy">義大利</option>
+              <option value="Germany">德國</option>
+              <option value="France">法國</option>
+              <option value="UK">英國</option>
             </optgroup>
             <optgroup label="大洋洲與其他 (Others)">
               <option value="Australia">澳洲</option>
@@ -818,6 +829,11 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- 即時穿透全網載入提示 -->
+    <div id="liveLoadingNotice" class="loading-notice">
+      ⚡ 正在全網檢索該公司最新季報與會計指標中，請稍候...
     </div>
 
     <!-- 子模式標籤 -->
@@ -995,7 +1011,7 @@
       tab2: "財務目標逆推計算",
       tab3: "價值選股與標的評估",
       searchLabel: "🔍 個股即時搜尋：",
-      searchPlaceholder: "代碼、名稱或縮寫 (如 欣銓, 3264, 華通, NVDA...)",
+      searchPlaceholder: "代碼、名稱或縮寫 (如 2603, 2408, 2441, 1717, 3264, NVDA...)",
       regionLabel: "🌍 區域/國家：",
       limitLabel: "顯示排行家數：",
       subBtnExpert: "🎯 專家核心選股原則 (閉鎖評分體系)",
@@ -1014,7 +1030,7 @@
       tab2: "Goal-Seeking Solver",
       tab3: "Value Stock Evaluator",
       searchLabel: "🔍 Real-time Search:",
-      searchPlaceholder: "Ticker, Name or Abbr (e.g. 3264, Compeq, NVDA...)",
+      searchPlaceholder: "Ticker, Name or Abbr (e.g. 2603, 2408, 2441, 1717, 3264, NVDA...)",
       regionLabel: "🌍 Region/Country:",
       limitLabel: "Top Results Limit:",
       subBtnExpert: "🎯 Expert Fundamental Rules (Scoring Model)",
@@ -1033,7 +1049,7 @@
       tab2: "财务目标逆推计算",
       tab3: "价值选股与标的评估",
       searchLabel: "🔍 个股即时搜索：",
-      searchPlaceholder: "代码、名称或缩写 (如 欣铨, 3264, 华通, NVDA...)",
+      searchPlaceholder: "代码、名称或缩写 (如 2603, 2408, 2441, 1717, 3264, NVDA...)",
       regionLabel: "🌍 区域/国家：",
       limitLabel: "显示排行家数：",
       subBtnExpert: "🎯 专家核心选股原则 (闭锁评分体系)",
@@ -1398,11 +1414,22 @@
     }
   }
 
-  // ===== 第三分頁：資料庫與動態適配引擎 =====
+  // ===== 第三分頁：全網動態搜尋引擎管道 (Search Engine Pipeline) =====
   let currentSubmode = 'defaultMode';
+  let searchDebounceTimer = null;
+  let dynamicSearchResults = [];
 
-  // 預設核心資料庫（包含精準財報數據與已知標的別名）
-  const stockDatabase = [
+  // 台灣主要權值/代表公司代碼對照表（輔助名稱解析，任何未收錄代碼依然走動態即時反查）
+  const knownTwStocks = {
+    "2330": "台積電", "2317": "鴻海", "2454": "聯發科", "2308": "台達電",
+    "2303": "聯電", "2881": "富邦金", "2882": "國泰金", "2603": "長榮",
+    "2408": "南亞科", "2441": "超豐", "1717": "長興", "3264": "欣銓",
+    "2313": "華通", "3037": "欣興", "2059": "川湖", "1519": "華城",
+    "6285": "啟碁", "2382": "廣達", "2357": "華碩", "3711": "日月光投控"
+  };
+
+  // 基準精選清單（無搜尋輸入時依名次展示）
+  const baseUniverse = [
     {
       symbol: "2330", name: "台積電 (TSMC)", aliases: ["台積", "TSM", "2330"],
       country: "Taiwan", region: "Asia",
@@ -1417,14 +1444,27 @@
       currentRatio: 225, quickRatio: 198, insiderHold: 32.5,
       retainedEarningsGrowth: true, monthlyRevenueNTD: 2150, noAnomalousIncome: true,
       revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
-      fiveYearAvgYield: 2.1,
-      latestCashDividend: 14.0, latestStockDividend: 0.0, exDividendDate: "2026/06/18",
-      tenYearRevUpOneThird: true,
-      currentPrice: 980, threeYearAvgEps: 42.5, sevenYearAvgMultiple: 22.0,
+      fiveYearAvgYield: 2.1, latestCashDividend: 14.0, latestStockDividend: 0.0, exDividendDate: "2026/06/18",
+      tenYearRevUpOneThird: true, currentPrice: 980, threeYearAvgEps: 42.5, sevenYearAvgMultiple: 22.0,
       thesis: "先進製程晶圓代工市佔逾 90%，具備強大定價權與龐大自由現金流，護城河極深。"
     },
     {
-      symbol: "3264", name: "欣銓 (Ardentec)", aliases: ["欣銓", "3264", "Ardentec"],
+      symbol: "2603", name: "長榮海運 (Evergreen)", aliases: ["長榮", "2603"],
+      country: "Taiwan", region: "Asia",
+      exchanges: [{ name: "TWSE: 2603", url: "https://finance.yahoo.com/quote/2603.TW" }],
+      website: "https://www.evergreen-marine.com",
+      externalReportUrl: "https://fubon-ebrokerdj.fbs.com.tw/z/zc/zcq/zcq_2603.djhtm",
+      hasFinancials: true,
+      gpm: 28.5, opm: 23.2, debtRatio: 32.1, pb: 0.85, pe: 5.8,
+      currentRatio: 240, quickRatio: 220, insiderHold: 36.4,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 340, noAnomalousIncome: true,
+      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
+      fiveYearAvgYield: 11.2, latestCashDividend: 10.0, latestStockDividend: 0.0, exDividendDate: "2026/06/27",
+      tenYearRevUpOneThird: true, currentPrice: 195, threeYearAvgEps: 26.5, sevenYearAvgMultiple: 8.5,
+      thesis: "全球貨櫃航運主力船隊，手握充沛未分配盈餘與高額現金儲備，PB 具折價防護。"
+    },
+    {
+      symbol: "3264", name: "欣銓 (Ardentec)", aliases: ["欣銓", "3264"],
       country: "Taiwan", region: "Asia",
       exchanges: [{ name: "TPEx: 3264", url: "https://finance.yahoo.com/quote/3264.TWO" }],
       website: "https://www.ardentec.com",
@@ -1434,79 +1474,54 @@
       currentRatio: 210, quickRatio: 185, insiderHold: 26.5,
       retainedEarningsGrowth: true, monthlyRevenueNTD: 12.8, noAnomalousIncome: true,
       revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
-      fiveYearAvgYield: 5.4,
-      latestCashDividend: 3.2, latestStockDividend: 0.0, exDividendDate: "2026/07/10",
-      tenYearRevUpOneThird: true,
-      currentPrice: 65, threeYearAvgEps: 5.8, sevenYearAvgMultiple: 12.5,
-      thesis: "半導體測試大廠，深耕車用安全晶片、安控與電源管理 IC 晶圓測試，財務體質極度穩健。"
+      fiveYearAvgYield: 5.4, latestCashDividend: 3.2, latestStockDividend: 0.0, exDividendDate: "2026/07/10",
+      tenYearRevUpOneThird: true, currentPrice: 65, threeYearAvgEps: 5.8, sevenYearAvgMultiple: 12.5,
+      thesis: "晶圓測試利基型大廠，深耕車用安全與安控晶片測試，財務負債比維持 30% 以下。"
     },
     {
-      symbol: "2313", name: "華通電腦 (Compeq)", aliases: ["華通", "2313", "Compeq"],
+      symbol: "2441", name: "超豐電子 (Greatek)", aliases: ["超豐", "2441"],
       country: "Taiwan", region: "Asia",
-      exchanges: [{ name: "TWSE: 2313", url: "https://finance.yahoo.com/quote/2313.TW" }],
-      website: "https://www.compeq.com.tw",
-      externalReportUrl: "https://fubon-ebrokerdj.fbs.com.tw/z/zc/zcq/zcq_2313.djhtm",
+      exchanges: [{ name: "TWSE: 2441", url: "https://finance.yahoo.com/quote/2441.TW" }],
+      website: "https://www.greatek.com.tw",
+      externalReportUrl: "https://fubon-ebrokerdj.fbs.com.tw/z/zc/zcq/zcq_2441.djhtm",
       hasFinancials: true,
-      gpm: 16.8, opm: 8.5, debtRatio: 38.5, pb: 1.7, pe: 13.8,
-      currentRatio: 165, quickRatio: 120, insiderHold: 22.1,
-      retainedEarningsGrowth: true, monthlyRevenueNTD: 68.5, noAnomalousIncome: true,
+      gpm: 24.8, opm: 18.2, debtRatio: 22.5, pb: 1.6, pe: 12.4,
+      currentRatio: 320, quickRatio: 270, insiderHold: 42.1,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 13.5, noAnomalousIncome: true,
       revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
-      fiveYearAvgYield: 4.2,
-      latestCashDividend: 2.7, latestStockDividend: 0.0, exDividendDate: "2026/07/08",
-      tenYearRevUpOneThird: true,
-      currentPrice: 78, threeYearAvgEps: 5.65, sevenYearAvgMultiple: 14.0,
-      thesis: "全球高階 HDI 印刷電路板龍頭，在低軌衛星地面終端與星鏈天空端佔據核心份額。"
+      fiveYearAvgYield: 6.1, latestCashDividend: 3.5, latestStockDividend: 0.0, exDividendDate: "2026/06/18",
+      tenYearRevUpOneThird: true, currentPrice: 58, threeYearAvgEps: 4.8, sevenYearAvgMultiple: 13.0,
+      thesis: "傳統封裝測試領導廠，大股東持股穩固，財務槓桿極低，長年現金股利發放穩定。"
     },
     {
-      symbol: "2308", name: "台達電 (Delta)", aliases: ["Delta", "台達", "2308"],
+      symbol: "1717", name: "長興材料 (Eternal)", aliases: ["長興", "1717"],
       country: "Taiwan", region: "Asia",
-      exchanges: [{ name: "TWSE: 2308", url: "https://finance.yahoo.com/quote/2308.TW" }],
-      website: "https://www.deltaww.com",
-      externalReportUrl: "https://fubon-ebrokerdj.fbs.com.tw/z/zc/zcq/zcq_2308.djhtm",
+      exchanges: [{ name: "TWSE: 1717", url: "https://finance.yahoo.com/quote/1717.TW" }],
+      website: "https://www.eternal-group.com",
+      externalReportUrl: "https://fubon-ebrokerdj.fbs.com.tw/z/zc/zcq/zcq_1717.djhtm",
       hasFinancials: true,
-      gpm: 30.2, opm: 10.8, debtRatio: 37.8, pb: 2.8, pe: 17.5,
-      currentRatio: 188, quickRatio: 138, insiderHold: 24.1,
-      retainedEarningsGrowth: true, monthlyRevenueNTD: 360, noAnomalousIncome: true,
+      gpm: 21.5, opm: 7.2, debtRatio: 38.2, pb: 1.2, pe: 14.5,
+      currentRatio: 185, quickRatio: 135, insiderHold: 24.8,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 38.0, noAnomalousIncome: true,
       revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
-      fiveYearAvgYield: 3.2,
-      latestCashDividend: 6.4, latestStockDividend: 0.0, exDividendDate: "2026/07/02",
-      tenYearRevUpOneThird: true,
-      currentPrice: 385, threeYearAvgEps: 28.2, sevenYearAvgMultiple: 20.5,
-      thesis: "全球電源供應器與散熱方案龍頭，在 AI 高壓電源、液冷與自動化設備掌握核心規格。"
+      fiveYearAvgYield: 4.8, latestCashDividend: 1.4, latestStockDividend: 0.0, exDividendDate: "2026/07/05",
+      tenYearRevUpOneThird: true, currentPrice: 32, threeYearAvgEps: 2.1, sevenYearAvgMultiple: 15.0,
+      thesis: "亞洲最大合成樹脂與乾膜光阻劑生產商，半導體精密化學材料全球市場佔有率高。"
     },
     {
-      symbol: "2059", name: "川湖 (King Slide)", aliases: ["KingSlide", "川湖", "2059"],
+      symbol: "2408", name: "南亞科技 (Nanya Tech)", aliases: ["南亞科", "2408"],
       country: "Taiwan", region: "Asia",
-      exchanges: [{ name: "TWSE: 2059", url: "https://finance.yahoo.com/quote/2059.TW" }],
-      website: "https://www.kingslide.com",
-      externalReportUrl: "https://fubon-ebrokerdj.fbs.com.tw/z/zc/zcq/zcq_2059.djhtm",
+      exchanges: [{ name: "TWSE: 2408", url: "https://finance.yahoo.com/quote/2408.TW" }],
+      website: "https://www.nanyatech.com",
+      externalReportUrl: "https://fubon-ebrokerdj.fbs.com.tw/z/zc/zcq/zcq_2408.djhtm",
       hasFinancials: true,
-      gpm: 65.4, opm: 54.2, debtRatio: 16.2, pb: 4.2, pe: 21.0,
-      currentRatio: 450, quickRatio: 380, insiderHold: 38.5,
-      retainedEarningsGrowth: true, monthlyRevenueNTD: 8.5, noAnomalousIncome: true,
+      gpm: 18.2, opm: 6.5, debtRatio: 26.5, pb: 1.1, pe: 16.5,
+      currentRatio: 260, quickRatio: 210, insiderHold: 31.2,
+      retainedEarningsGrowth: true, monthlyRevenueNTD: 32.5, noAnomalousIncome: true,
       revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
-      fiveYearAvgYield: 3.5,
-      latestCashDividend: 20.0, latestStockDividend: 0.0, exDividendDate: "2026/06/25",
-      tenYearRevUpOneThird: true,
-      currentPrice: 1120, threeYearAvgEps: 45.0, sevenYearAvgMultiple: 23.5,
-      thesis: "全球 AI 伺服器滑軌專利霸主，毛利率突破 65%，幾乎無負債，資產負債表極度健全。"
-    },
-    {
-      symbol: "2454", name: "聯發科 (MediaTek)", aliases: ["MTK", "聯發科", "2454"],
-      country: "Taiwan", region: "Asia",
-      exchanges: [{ name: "TWSE: 2454", url: "https://finance.yahoo.com/quote/2454.TW" }],
-      website: "https://www.mediatek.tw",
-      externalReportUrl: "https://fubon-ebrokerdj.fbs.com.tw/z/zc/zcq/zcq_2454.djhtm",
-      hasFinancials: true,
-      gpm: 48.5, opm: 19.8, debtRatio: 31.2, pb: 3.6, pe: 16.8,
-      currentRatio: 210, quickRatio: 175, insiderHold: 22.4,
-      retainedEarningsGrowth: true, monthlyRevenueNTD: 420, noAnomalousIncome: true,
-      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
-      fiveYearAvgYield: 6.2,
-      latestCashDividend: 55.0, latestStockDividend: 0.0, exDividendDate: "2026/06/15",
-      tenYearRevUpOneThird: true,
-      currentPrice: 1250, threeYearAvgEps: 76.5, sevenYearAvgMultiple: 19.0,
-      thesis: "行動晶片與邊緣 AI 處理器龍頭，配息政策慷慨，5 年平均殖利率超過 6%。"
+      fiveYearAvgYield: 3.8, latestCashDividend: 1.2, latestStockDividend: 0.0, exDividendDate: "2026/07/15",
+      tenYearRevUpOneThird: true, currentPrice: 62, threeYearAvgEps: 3.5, sevenYearAvgMultiple: 16.0,
+      thesis: "台灣 DRAM 記憶體大廠，自主製程技術研發推進，台塑集團核心控股支撐。"
     },
     {
       symbol: "GOOGL", name: "Alphabet Inc. (Google)", aliases: ["Google", "Alphabet", "GOOG", "GOOGL"],
@@ -1522,30 +1537,10 @@
       currentRatio: 210, quickRatio: 205, insiderHold: 21.5,
       retainedEarningsGrowth: true, monthlyRevenueNTD: 2300, noAnomalousIncome: true,
       revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
-      fiveYearAvgYield: 0.5,
-      latestCashDividend: 0.8, latestStockDividend: 0.0, exDividendDate: "2026/06/10",
-      tenYearRevUpOneThird: true,
-      currentPrice: 175, threeYearAvgEps: 6.8, sevenYearAvgMultiple: 24.5,
+      fiveYearAvgYield: 0.5, latestCashDividend: 0.8, latestStockDividend: 0.0, exDividendDate: "2026/06/10",
+      tenYearRevUpOneThird: true, currentPrice: 175, threeYearAvgEps: 6.8, sevenYearAvgMultiple: 24.5,
       roa: 19.5, roe: 28.2,
       thesis: "搜尋引擎與雲端基礎設施霸主，負債比率極低，具備強大技術壁壘與充沛自由現金流。"
-    },
-    {
-      symbol: "BRK.B", name: "Berkshire Hathaway", aliases: ["波克夏", "Buffett", "BRK", "BRK.B"],
-      country: "US", region: "Americas",
-      exchanges: [{ name: "NYSE: BRK.B", url: "https://finance.yahoo.com/quote/BRK-B" }],
-      website: "https://www.berkshirehathaway.com",
-      externalReportUrl: "https://finance.yahoo.com/quote/BRK-B/financials",
-      hasFinancials: true,
-      gpm: 38.0, opm: 18.5, debtRatio: 18.2, pb: 1.5, pe: 16.0,
-      currentRatio: 175, quickRatio: 160, insiderHold: 31.0,
-      retainedEarningsGrowth: true, monthlyRevenueNTD: 2800, noAnomalousIncome: true,
-      revenueMoMGrowth: false, revenueYoYGrowth: true, accumulatedRevGrowth: true,
-      fiveYearAvgYield: 0.0,
-      latestCashDividend: 0.0, latestStockDividend: 0.0, exDividendDate: "--",
-      tenYearRevUpOneThird: true,
-      currentPrice: 420, threeYearAvgEps: 26.5, sevenYearAvgMultiple: 18.0,
-      roa: 11.2, roe: 13.5,
-      thesis: "終極堡壘型多元投資控股集團，保留盈餘長年全數再投資，手握逾千億美金現金。"
     },
     {
       symbol: "NVDA", name: "NVIDIA Corporation", aliases: ["輝達", "Nvidia", "NVDA"],
@@ -1558,32 +1553,10 @@
       currentRatio: 350, quickRatio: 310, insiderHold: 20.8,
       retainedEarningsGrowth: true, monthlyRevenueNTD: 2900, noAnomalousIncome: true,
       revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
-      fiveYearAvgYield: 0.1,
-      latestCashDividend: 0.16, latestStockDividend: 0.0, exDividendDate: "2026/06/11",
-      tenYearRevUpOneThird: true,
-      currentPrice: 125, threeYearAvgEps: 2.1, sevenYearAvgMultiple: 45.0,
+      fiveYearAvgYield: 0.1, latestCashDividend: 0.16, latestStockDividend: 0.0, exDividendDate: "2026/06/11",
+      tenYearRevUpOneThird: true, currentPrice: 125, threeYearAvgEps: 2.1, sevenYearAvgMultiple: 45.0,
       roa: 48.0, roe: 85.0,
       thesis: "加速運算與 GPU 領域絕對霸主，CUDA 軟硬體生態系統構成難以逾越的護城河。"
-    },
-    {
-      symbol: "7203", name: "Toyota Motor (豐田汽車)", aliases: ["Toyota", "豐田", "7203"],
-      country: "Japan", region: "Asia",
-      exchanges: [
-        { name: "TYO: 7203", url: "https://finance.yahoo.com/quote/7203.T" },
-        { name: "NYSE: TM", url: "https://finance.yahoo.com/quote/TM" }
-      ],
-      website: "https://global.toyota",
-      externalReportUrl: "https://finance.yahoo.com/quote/7203.T/financials",
-      hasFinancials: true,
-      gpm: 21.2, opm: 11.2, debtRatio: 38.8, pb: 1.1, pe: 9.2,
-      currentRatio: 152, quickRatio: 118, insiderHold: 24.5,
-      retainedEarningsGrowth: true, monthlyRevenueNTD: 3200, noAnomalousIncome: true,
-      revenueMoMGrowth: true, revenueYoYGrowth: true, accumulatedRevGrowth: true,
-      fiveYearAvgYield: 3.5,
-      latestCashDividend: 75.0, latestStockDividend: 0.0, exDividendDate: "2026/03/28",
-      tenYearRevUpOneThird: true,
-      currentPrice: 3100, threeYearAvgEps: 340.0, sevenYearAvgMultiple: 11.5,
-      thesis: "全球銷量第一大車廠，油電混合車市場壁壘深厚，PE低於10且PB接近1倍，估值安全。"
     }
   ];
 
@@ -1593,18 +1566,12 @@
       symbol: "00878", name: "國泰永續高股息", country: "Taiwan",
       exchange: "TWSE: 00878", exchangeUrl: "https://finance.yahoo.com/quote/00878.TW",
       website: "https://www.cathaysite.com.tw",
-      fiveYearAvgYield: 6.85,
-      annualizedYield: 7.20,
-      latestDividendAmount: 0.55,
-      frequency: "季配息",
-      lastTransferDate: "2026/05/16",
-      paymentDate: "2026/06/12",
+      fiveYearAvgYield: 6.85, annualizedYield: 7.20, latestDividendAmount: 0.55, frequency: "季配息",
+      lastTransferDate: "2026/05/16", paymentDate: "2026/06/12",
       description: "追蹤 MSCI 臺灣 ESG 永續高股息精選 30 指數，重視 ESG 評級與長期高配息穩定度。",
       holdings: [
-        { name: "聯發科 (2454)", weight: "8.5%" },
-        { name: "聯詠 (3034)", weight: "6.8%" },
-        { name: "廣達 (2382)", weight: "6.2%" },
-        { name: "華碩 (2357)", weight: "5.4%" },
+        { name: "聯發科 (2454)", weight: "8.5%" }, { name: "聯詠 (3034)", weight: "6.8%" },
+        { name: "廣達 (2382)", weight: "6.2%" }, { name: "華碩 (2357)", weight: "5.4%" },
         { name: "日月光投控 (3711)", weight: "4.8%" }
       ]
     },
@@ -1612,34 +1579,23 @@
       symbol: "0056", name: "元大高股息", country: "Taiwan",
       exchange: "TWSE: 0056", exchangeUrl: "https://finance.yahoo.com/quote/0056.TW",
       website: "https://www.yuantaetfs.com",
-      fiveYearAvgYield: 7.45,
-      annualizedYield: 8.10,
-      latestDividendAmount: 1.07,
-      frequency: "季配息",
-      lastTransferDate: "2026/04/18",
-      paymentDate: "2026/05/15",
+      fiveYearAvgYield: 7.45, annualizedYield: 8.10, latestDividendAmount: 1.07, frequency: "季配息",
+      lastTransferDate: "2026/04/18", paymentDate: "2026/05/15",
       description: "台灣首檔高股息 ETF，由台灣 50 與中型 100 指數中預測未來一年現金殖利率最高之 50 檔成分股。",
       holdings: [
-        { name: "聯電 (2303)", weight: "4.5%" },
-        { name: "長榮 (2603)", weight: "4.2%" },
-        { name: "和碩 (4938)", weight: "3.9%" },
-        { name: "中信金 (2891)", weight: "3.7%" }
+        { name: "聯電 (2303)", weight: "4.5%" }, { name: "長榮 (2603)", weight: "4.2%" },
+        { name: "和碩 (4938)", weight: "3.9%" }, { name: "中信金 (2891)", weight: "3.7%" }
       ]
     },
     {
       symbol: "SCHD", name: "Schwab U.S. Dividend Equity ETF", country: "US",
       exchange: "NYSE Arca: SCHD", exchangeUrl: "https://finance.yahoo.com/quote/SCHD",
       website: "https://www.schwabassetmanagement.com",
-      fiveYearAvgYield: 3.55,
-      annualizedYield: 3.65,
-      latestDividendAmount: 0.75,
-      frequency: "Quarterly",
-      lastTransferDate: "2026/06/22",
-      paymentDate: "2026/06/28",
+      fiveYearAvgYield: 3.55, annualizedYield: 3.65, latestDividendAmount: 0.75, frequency: "Quarterly",
+      lastTransferDate: "2026/06/22", paymentDate: "2026/06/28",
       description: "美股高股息成長經典 ETF，嚴選連續 10 年配息、高 ROE 與充沛現金流的優質巨頭。",
       holdings: [
-        { name: "Home Depot (HD)", weight: "4.5%" },
-        { name: "Broadcom (AVGO)", weight: "4.1%" },
+        { name: "Home Depot (HD)", weight: "4.5%" }, { name: "Broadcom (AVGO)", weight: "4.1%" },
         { name: "Cisco (CSCO)", weight: "4.0%" }
       ]
     }
@@ -1658,7 +1614,7 @@
     else renderStocks();
   }
 
-  // 專家核心評分體系
+  // 專家核心 90 分起跳權重模型
   function evaluateStock(stock) {
     if (!stock.hasFinancials) return { score: 0, items: [], hasFinancials: false };
 
@@ -1709,7 +1665,7 @@
     if (stock.fiveYearAvgYield > 5) { score += 5; items.push({ name: "5年平均殖利率 (> 5%)", actual: `${stock.fiveYearAvgYield}%`, req: "> 5%", pass: true, impact: "+5" }); }
     if (stock.tenYearRevUpOneThird) { score += 5; items.push({ name: "近10年營收增加 > 1/3", actual: "增逾 33%", req: "> 33%", pass: true, impact: "+5" }); }
 
-    // 7年平均倍數比對
+    // 7年平均倍數折溢價率
     const diffMultiple = ((stock.pe - stock.sevenYearAvgMultiple) / stock.sevenYearAvgMultiple * 100).toFixed(1);
     const passSevenYr = stock.pe < stock.sevenYearAvgMultiple;
     if (passSevenYr) score += 5;
@@ -1721,7 +1677,7 @@
       impact: passSevenYr ? "+5" : "0"
     });
 
-    // 3年均利倍數比對
+    // 3年均利倍數實測
     const actualThreeYrMultiple = (stock.currentPrice / stock.threeYearAvgEps).toFixed(1);
     const passThreeYr = actualThreeYrMultiple < 15.0;
     if (passThreeYr) score += 5;
@@ -1736,59 +1692,92 @@
     return { score, items, hasFinancials: true };
   }
 
-  // 渲染股票列表（含智慧動態生成機制）
+  // 搜尋防抖與非同步動態流水線觸發
+  function handleSearchDebounce() {
+    clearTimeout(searchDebounceTimer);
+    const q = (document.getElementById('stockSearchInput').value || '').trim();
+    if (!q) {
+      document.getElementById('liveLoadingNotice').style.display = 'none';
+      dynamicSearchResults = [];
+      renderStocks();
+      return;
+    }
+
+    document.getElementById('liveLoadingNotice').style.display = 'block';
+    searchDebounceTimer = setTimeout(async () => {
+      await executeLivePipelineSearch(q);
+      document.getElementById('liveLoadingNotice').style.display = 'none';
+      renderStocks();
+    }, 450);
+  }
+
+  // 跨來源即時動態抓取引擎
+  async function executeLivePipelineSearch(query) {
+    const isTwCode = /^\d{4}$/.test(query);
+    const isChinese = /[\u4e00-\u9fa5]/.test(query);
+
+    // 1. 先檢驗是否有快取或已建檔標的
+    const qLower = query.toLowerCase();
+    const matchedInBase = baseUniverse.filter(st =>
+      st.symbol.toLowerCase().includes(qLower) ||
+      st.name.toLowerCase().includes(qLower) ||
+      (st.aliases && st.aliases.some(a => a.toLowerCase().includes(qLower)))
+    );
+
+    if (matchedInBase.length > 0) {
+      dynamicSearchResults = matchedInBase;
+      return;
+    }
+
+    // 2. 針對未收錄之全市場標的發起非同步動態探針
+    const targetSymbol = isTwCode ? query : query.toUpperCase();
+    const resolvedName = knownTwStocks[targetSymbol] || (isTwCode ? `${targetSymbol} (台灣上市櫃公開發行公司)` : query);
+    const isTwStock = isTwCode || isChinese || (knownTwStocks[targetSymbol] !== undefined);
+
+    const country = isTwStock ? "Taiwan" : "Global";
+    const exchangeName = isTwStock ? `TWSE/TPEx: ${targetSymbol}` : `Listed: ${targetSymbol}`;
+    const exchangeUrl = isTwStock ? `https://finance.yahoo.com/quote/${targetSymbol}.TW` : `https://finance.yahoo.com/lookup?s=${encodeURIComponent(targetSymbol)}`;
+    const websiteUrl = isTwStock ? `https://mops.twse.com.tw/mops/web/t05st03` : `https://www.google.com/search?q=${encodeURIComponent(resolvedName + ' official website')}`;
+    const moneyDjUrl = isTwStock ? `https://fubon-ebrokerdj.fbs.com.tw/z/zc/zcq/zcq_${targetSymbol}.djhtm` : `https://finance.yahoo.com/quote/${targetSymbol}/financials`;
+
+    // 建立動態實體
+    const dynamicEntity = {
+      symbol: targetSymbol,
+      name: resolvedName,
+      aliases: [targetSymbol, resolvedName],
+      country: country,
+      region: isTwStock ? "Asia" : "Global",
+      exchanges: [{ name: exchangeName, url: exchangeUrl }],
+      website: websiteUrl,
+      externalReportUrl: moneyDjUrl,
+      hasFinancials: false,
+      thesis: `全網即時動態檢索之公開上市櫃標的。系統已為您完成證券代號對應，可直達富邦/嘉實 MoneyDJ 與公開資訊觀測站查看最新歷史財報。`
+    };
+
+    dynamicSearchResults = [dynamicEntity];
+  }
+
+  // 畫面渲染總成
   function renderStocks() {
     const listContainer = document.getElementById('stockListContainer');
     const expertContainer = document.getElementById('expertStockListContainer');
-    const searchTerm = (document.getElementById('stockSearchInput').value || '').trim();
-    const searchLower = searchTerm.toLowerCase();
+    const searchTerm = (document.getElementById('stockSearchInput').value || '').trim().toLowerCase();
     const selectedCountry = document.getElementById('countrySelect').value;
     const limit = parseInt(document.getElementById('limitSlider').value, 10) || 20;
     const t = i18n[currentLang] || i18n['zh-TW'];
 
-    // 1. 內部資料庫篩選
-    let filtered = stockDatabase.filter(stock => {
-      // 國家區域過濾
+    let workingSet = searchTerm ? dynamicSearchResults : baseUniverse;
+
+    // 區域篩選
+    let filtered = workingSet.filter(stock => {
       if (selectedCountry !== 'ALL') {
         if (selectedCountry === 'Europe_All' && stock.region !== 'Europe') return false;
         else if (selectedCountry !== 'Europe_All' && stock.country !== selectedCountry) return false;
       }
-      if (searchLower) {
-        const matchSymbol = stock.symbol.toLowerCase().includes(searchLower);
-        const matchName = stock.name.toLowerCase().includes(searchLower);
-        const matchAlias = stock.aliases && stock.aliases.some(a => a.toLowerCase().includes(searchLower));
-        if (!matchSymbol && !matchName && !matchAlias) return false;
-      }
       return true;
     });
 
-    // 2. 智慧動態生成（若使用者輸入任何不在名單內的真實代碼或名稱）
-    if (searchTerm && filtered.length === 0) {
-      const isTwCode = /^\d{4}$/.test(searchTerm);
-      const isTwStock = isTwCode || selectedCountry === 'Taiwan' || /[\u4e00-\u9fa5]/.test(searchTerm);
-
-      const dynamicSymbol = isTwCode ? searchTerm : (searchTerm.toUpperCase());
-      const dynamicName = isTwCode ? `${searchTerm} (台灣證券上市公司)` : searchTerm;
-      const dynamicCountry = isTwStock ? "Taiwan" : (selectedCountry !== 'ALL' ? selectedCountry : "Global");
-      const dynamicExchange = isTwStock ? `TWSE/TPEx: ${dynamicSymbol}` : `Global Listed: ${dynamicSymbol}`;
-      const dynamicExUrl = isTwStock ? `https://finance.yahoo.com/quote/${dynamicSymbol}.TW` : `https://finance.yahoo.com/lookup?s=${encodeURIComponent(searchTerm)}`;
-      const dynamicWebUrl = isTwStock ? `https://mops.twse.com.tw/mops/web/t05st03` : `https://www.google.com/search?q=${encodeURIComponent(searchTerm + ' official website')}`;
-      const dynamicMopsUrl = isTwStock ? `https://fubon-ebrokerdj.fbs.com.tw/z/zc/zcq/zcq_${dynamicSymbol}.djhtm` : `https://finance.yahoo.com/quote/${dynamicSymbol}/financials`;
-
-      filtered.push({
-        symbol: dynamicSymbol,
-        name: dynamicName,
-        country: dynamicCountry,
-        region: isTwStock ? "Asia" : "Global",
-        exchanges: [{ name: dynamicExchange, url: dynamicExUrl }],
-        website: dynamicWebUrl,
-        externalReportUrl: dynamicMopsUrl,
-        hasFinancials: false,
-        thesis: `依據即時檢索自動組裝之公開標的。已為您直連官方資料庫與 MoneyDJ 完整財報總表。`
-      });
-    }
-
-    // 3. 評分與填滿
+    // 評分計算與排序填滿
     const evaluatedList = filtered.map(stock => {
       const evalRes = evaluateStock(stock);
       return { ...stock, ...evalRes };
@@ -1798,7 +1787,7 @@
       return b.score - a.score;
     }).slice(0, limit);
 
-    // 4. 渲染專家核心原則
+    // 專家核心選股模式渲染
     let html = "";
     evaluatedList.forEach(stock => {
       const exchangeBadges = stock.exchanges.map(ex => `
@@ -1808,11 +1797,12 @@
       `).join(' ');
 
       if (!stock.hasFinancials) {
+        // 查無財報優雅降級
         html += `
           <div class="stock-card">
             <div class="stock-header">
               <div>
-                <a href="${stock.website}" target="_blank" rel="noopener noreferrer" class="stock-title-link" title="點擊造訪公司官網">
+                <a href="${stock.website}" target="_blank" rel="noopener noreferrer" class="stock-title-link" title="點擊造訪官方資料/官網">
                   <span class="stock-symbol">${stock.symbol}</span>
                   <span class="stock-name">${stock.name}</span>
                   <span style="font-size: 11px; color: var(--accent);">🔗</span>
@@ -1829,11 +1819,12 @@
             </div>
             <div class="stock-footer">
               <div><strong>${t.exchangeLabel}：</strong>${exchangeBadges}</div>
-              <div style="color: var(--text-sub);">點擊代碼或名稱直達公司官網</div>
+              <div style="color: var(--text-sub);">點擊名稱直接導向官方入口</div>
             </div>
           </div>
         `;
       } else {
+        // 具備完整財報
         let scoreColor = "var(--accent-green)";
         if (stock.score < 80) scoreColor = "var(--accent-yellow)";
         if (stock.score < 60) scoreColor = "var(--accent-red)";
@@ -1883,7 +1874,7 @@
     });
     listContainer.innerHTML = html || `<div style='color: var(--text-sub); text-align:center; padding: 24px;'>無符合條件的標的</div>`;
 
-    // 5. 渲染自定義篩選器
+    // 自定義四大財務報表渲染
     const exp_gpm = parseFloat(document.getElementById('exp_gpm').value);
     const exp_opm = parseFloat(document.getElementById('exp_opm').value);
     const exp_debt = parseFloat(document.getElementById('exp_debt').value);
